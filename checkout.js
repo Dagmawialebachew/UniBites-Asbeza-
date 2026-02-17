@@ -30,7 +30,7 @@ function computeDeliveryFee(subtotal) {
   const base = 80; // fixed start
   if (subtotal >= 500) {
     // add 3% of subtotal on top of base
-    return base + Math.round(subtotal * 0.03);
+    return base + Math.round(subtotal * 0.01);
   }
   return base;
 }
@@ -208,6 +208,7 @@ async function placeOrder(payloadOverride = null) {
 
   // allow modal to pass additional fields (payment_proof_url / payment_proof_base64)
   const payload = payloadOverride ? { ...basePayload, ...payloadOverride } : basePayload;
+  console.log("Checkout payload", payload);
 
   placeOrderBtn.disabled = true;
   const originalText = placeOrderBtn.textContent;
@@ -504,12 +505,11 @@ confirmPaymentBtn.addEventListener("click", async () => {
         quantity: i.quantity ?? 1,
         price: i.price
       })),
-      delivery_fee: deliveryFee,
-      total_price: total,
-      upfront_paid: upfront,
+    
       payment_proof_url: screenshotUrl || null,
       payment_proof_base64: screenshotUrl ? null : base64Data
     };
+    console.log("Checkout payload with proof", payload);
 
     const res = await fetch(`${API}/asbeza/checkout`, {
       method: "POST",

@@ -109,26 +109,57 @@ function renderItems(items) {
     `;
 
     card.querySelector(".add-btn").addEventListener("click", () => {
-      addToCart({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price,
-        variant_id: item.variant_id ?? null
-      });
-      pulseCart();
-    });
+  // If the API gives you a variants array, pick the first one as default
+  const defaultVariant = (item.variants && item.variants.length)
+    ? item.variants[0]
+    : { id: item.id, price: item.base_price ?? item.price };
+
+  addToCart(
+    {
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      variants: item.variants || []
+    },
+    defaultVariant // ✅ always pass a valid variant object
+  );
+
+  pulseCart();
+});
+
 
     itemsContainer.appendChild(card);
   });
 }
 
 /* ---------- Cart logic (persist on every change) ---------- */
-function addToCart(item) {
-  const existing = cart.find(c => c.id === item.id && c.variant_id === item.variant_id);
-  if (existing) existing.quantity += 1;
-  else cart.push({ ...item, quantity: 1 });
-  saveCart();
+function addToCart(item, selectedVariant) {
+  // selectedVariant should be the actual variant object { id, name, price }
+  const variantId = selectedVariant?.id;
+  const variantPrice = selectedVariant?.price;
+
+  if (!variantId || variantPrice == null) {
+    console.error("addToCart called without a valid variant");
+    toast("Please select a variant before adding to cart", { type: "error" });
+    return;
+  }
+
+  const existing = cart.find(c => c.variant_id === variantId);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({
+      id: item.id,                  // product id
+      name: item.name,
+      description: item.description,
+      variant_id: variantId,        // ✅ required by backend
+      price: variantPrice,          // ✅ required by backend
+      quantity: 1,
+      variants: item.variants || [] // optional, for UI
+    });
+  }
+
+  saveCart(cart);
   updateCartUI();
 }
 
