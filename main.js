@@ -5,7 +5,7 @@ let cart = [];
 async function loadItems() {
   const res = await fetch(`${API}/asbeza/items`);
 const data = await res.json();
-const items = data.items;   // <-- grab the array
+const items = data.items;   // <-- grab the array the array
 
 items.forEach(item => {
   const div = document.createElement("div");
