@@ -5,44 +5,55 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>UniBites · Asbeza</title>
 
-  <!-- Tailwind is already configured in your project -->
-  <link href="/src/style.css" rel="stylesheet" />
+  <!-- Tailwind output (already configured) -->
+  <link href="src/style.css" rel="stylesheet" />
 
   <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <!-- Meta for nicer mobile appearance -->
   <meta name="theme-color" content="#0f172a" />
+  <style>
+    :root{
+      --brand-grad-1: #FF7A00;
+      --brand-grad-2: #FFD200;
+      --brand-accent: #E53935;
+    }
+    .glass {
+      background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 text-slate-100 antialiased">
 
-  <div class="max-w-4xl mx-auto px-6 py-8">
+  <div class="max-w-5xl mx-auto px-6 py-10">
     <!-- Header -->
     <header class="flex items-center justify-between mb-8">
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-indigo-500 shadow-xl flex items-center justify-center transform-gpu">
-          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 7h18M7 21h10a2 2 0 0 0 2-2V7H5v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 3h8v4H8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+        <div id="logoWrap" class="w-16 h-16 rounded-2xl shadow-2xl transform-gpu"
+             style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2)); display:flex; align-items:center; justify-content:center;">
+          <img id="brandLogo" src="/assets/unibites-logo.png" alt="UniBites" class="w-12 h-12 object-contain hidden" />
+          <span id="logoFallback" class="text-white font-extrabold text-lg">UB</span>
         </div>
         <div>
-          <h1 class="text-2xl font-extrabold tracking-tight">UniBites · Asbeza</h1>
-          <p class="text-sm text-slate-400">Essentials delivered — sleek, fast, and student friendly</p>
+          <h1 class="text-3xl font-extrabold tracking-tight">UniBites · Asbeza</h1>
+          <p class="text-sm text-slate-400">Essentials delivered — sleek, fast, student friendly</p>
         </div>
       </div>
 
       <div class="flex items-center gap-3">
-        <button id="cartBtn" class="relative inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-rose-500 shadow-lg hover:scale-[1.02] transition-transform">
+        <button id="cartBtn" class="relative inline-flex items-center gap-2 px-4 py-2 rounded-lg shadow-xl transform-gpu"
+                style="background: linear-gradient(90deg, var(--brand-grad-1), var(--brand-grad-2));">
           <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span id="cartCount" class="text-sm font-semibold">0</span>
+          <span id="cartCount" class="text-sm font-semibold text-white">0</span>
         </button>
       </div>
     </header>
 
     <!-- Search / Filters -->
     <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-      <input id="searchInput" type="search" placeholder="Search toothpaste, snacks, deodorant..." class="col-span-2 px-4 py-3 rounded-xl bg-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <input id="searchInput" type="search" placeholder="Search toothpaste, snacks, deodorant..." class="col-span-2 px-4 py-3 rounded-xl bg-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400" />
       <div class="flex gap-2 justify-end">
         <button id="refreshBtn" class="px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition">Refresh</button>
       </div>
@@ -56,21 +67,24 @@
 
   <!-- Floating checkout bar -->
   <div class="fixed left-0 right-0 bottom-6 flex justify-center pointer-events-none">
-    <div class="w-full max-w-4xl px-6 pointer-events-auto">
-      <div class="backdrop-blur-md bg-white/6 border border-white/6 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
+    <div class="w-full max-w-5xl px-6 pointer-events-auto">
+      <div class="glass border border-white/6 rounded-3xl p-4 flex items-center justify-between shadow-2xl">
         <div>
           <div id="summaryText" class="text-sm text-slate-300">No items in cart</div>
-          <div id="summaryPrice" class="text-lg font-bold text-white">0 birr</div>
+          <div id="summaryPrice" class="text-2xl font-extrabold text-white">0 birr</div>
         </div>
         <div class="flex gap-3">
           <button id="clearCartBtn" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">Clear</button>
-          <button id="checkoutBtn" class="px-5 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-semibold shadow-lg">Checkout</button>
+          <button id="checkoutBtn" class="px-6 py-2 rounded-lg text-white font-semibold"
+                  style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));">
+            Checkout
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Cart modal (hidden by default) -->
+  <!-- Cart modal -->
   <div id="cartModal" class="fixed inset-0 z-50 hidden items-end md:items-center justify-center">
     <div class="absolute inset-0 bg-black/60" id="cartBackdrop"></div>
     <div class="relative w-full max-w-2xl mx-4 md:mx-0 bg-gradient-to-br from-slate-900/80 to-slate-800/80 border border-white/6 rounded-2xl p-6 shadow-2xl">
@@ -84,10 +98,131 @@
         <div id="cartTotal" class="text-xl font-bold">0 birr</div>
       </div>
       <div class="mt-4 flex justify-end">
-        <button id="modalCheckout" class="px-5 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-rose-500 text-white font-semibold">Place Order</button>
+        <button id="modalCheckout" class="px-5 py-2 rounded-lg text-white font-semibold"
+                style="background: linear-gradient(90deg, var(--brand-grad-1), var(--brand-grad-2));">
+          Place Order
+        </button>
       </div>
     </div>
   </div>
+
+  <script>
+    // Ensure cart persists across pages and checkout redirects to dedicated page.
+    // If a logo exists in /assets, show it; otherwise keep fallback.
+    (function initPage() {
+      try {
+        const stored = localStorage.getItem('ub_cart');
+        window.__UB_CART = stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        window.__UB_CART = [];
+      }
+
+      // Expose helper to save cart (main.js will call addToCart and then save)
+      window.saveCart = function(cart) {
+        window.__UB_CART = cart;
+        try { localStorage.setItem('ub_cart', JSON.stringify(cart)); } catch (e) {}
+      };
+
+      // Redirect checkout button to dedicated checkout page
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      checkoutBtn.addEventListener('click', () => {
+        // Save current cart (main.js should call saveCart when items change)
+        try { localStorage.setItem('ub_cart', JSON.stringify(window.__UB_CART || [])); } catch (e) {}
+        window.location.href = '/checkout.html';
+      });
+
+      // Wire cart button to open modal
+      const cartBtn = document.getElementById('cartBtn');
+      const cartModal = document.getElementById('cartModal');
+      const cartBackdrop = document.getElementById('cartBackdrop');
+      const closeCart = document.getElementById('closeCart');
+      cartBtn.addEventListener('click', () => {
+        renderCartPreview();
+        cartModal.classList.remove('hidden');
+        cartModal.classList.add('flex');
+      });
+      cartBackdrop.addEventListener('click', () => { cartModal.classList.add('hidden'); cartModal.classList.remove('flex'); });
+      closeCart.addEventListener('click', () => { cartModal.classList.add('hidden'); cartModal.classList.remove('flex'); });
+
+      // Clear cart
+      document.getElementById('clearCartBtn').addEventListener('click', () => {
+        window.__UB_CART = [];
+        try { localStorage.setItem('ub_cart', JSON.stringify([])); } catch (e) {}
+        updateSummaryUI();
+      });
+
+      // Refresh button
+      document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
+
+      // Show logo if available
+      const logoImg = document.getElementById('brandLogo');
+      logoImg.addEventListener('error', () => { logoImg.classList.add('hidden'); document.getElementById('logoFallback').classList.remove('hidden'); });
+      logoImg.addEventListener('load', () => { logoImg.classList.remove('hidden'); document.getElementById('logoFallback').classList.add('hidden'); });
+
+      updateSummaryUI();
+    })();
+
+    function updateSummaryUI() {
+      const cart = window.__UB_CART || [];
+      const count = cart.reduce((s, it) => s + (it.quantity || 1), 0);
+      const total = cart.reduce((s, it) => s + ((it.price || 0) * (it.quantity || 1)), 0);
+      document.getElementById('cartCount').textContent = String(count);
+      document.getElementById('summaryText').textContent = count ? `${count} item${count>1?'s':''} in cart` : 'No items in cart';
+      document.getElementById('summaryPrice').textContent = `${Number(total).toLocaleString()} birr`;
+      document.getElementById('cartTotal').textContent = `${Number(total).toLocaleString()} birr`;
+    }
+
+    function renderCartPreview() {
+      const list = document.getElementById('cartList');
+      list.innerHTML = '';
+      const cart = window.__UB_CART || [];
+      if (!cart.length) {
+        list.innerHTML = '<div class="text-slate-400">Your cart is empty</div>';
+        return;
+      }
+      cart.forEach((it, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-4';
+        row.innerHTML = `
+          <div class="flex-1">
+            <div class="text-white font-medium">${escapeHtml(it.name)}</div>
+            <div class="text-slate-400 text-sm">${escapeHtml((it.quantity||1) + ' × ' + (it.price || 0) + ' birr')}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button data-idx="${idx}" class="qty-btn px-2 py-1 rounded bg-slate-700 text-sm">−</button>
+            <button data-idx="${idx}" class="remove-btn px-2 py-1 rounded bg-rose-600 text-sm">Remove</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      // attach handlers
+      list.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = Number(e.currentTarget.dataset.idx);
+          const cart = window.__UB_CART || [];
+          cart[idx].quantity = Math.max(1, (cart[idx].quantity || 1) - 1);
+          window.saveCart(cart);
+          updateSummaryUI();
+          renderCartPreview();
+        });
+      });
+      list.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = Number(e.currentTarget.dataset.idx);
+          const cart = window.__UB_CART || [];
+          cart.splice(idx, 1);
+          window.saveCart(cart);
+          updateSummaryUI();
+          renderCartPreview();
+        });
+      });
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;');
+    }
+  </script>
 
   <script type="module" src="/main.js"></script>
 </body>
