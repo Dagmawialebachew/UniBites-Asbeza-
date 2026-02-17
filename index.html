@@ -1,23 +1,94 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>UniBites Asbeza</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UniBites · Asbeza</title>
+
+  <!-- Tailwind is already configured in your project -->
+  <link href="/src/style.css" rel="stylesheet" />
+
+  <!-- Telegram Web App -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Meta for nicer mobile appearance -->
+  <meta name="theme-color" content="#0f172a" />
 </head>
-<body class="bg-gray-100 text-gray-900">
-  <div class="container">
-    <h1 class="title">🧺 Asbeza Essentials</h1>
+<body class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 text-slate-100 antialiased">
 
-    <div id="items" class="items-list"></div>
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-indigo-500 shadow-xl flex items-center justify-center transform-gpu">
+          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 7h18M7 21h10a2 2 0 0 0 2-2V7H5v12a2 2 0 0 0 2 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 3h8v4H8z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-extrabold tracking-tight">UniBites · Asbeza</h1>
+          <p class="text-sm text-slate-400">Essentials delivered — sleek, fast, and student friendly</p>
+        </div>
+      </div>
 
-    <div class="checkout-bar">
-      <button id="checkoutBtn" class="checkout-btn">Checkout</button>
+      <div class="flex items-center gap-3">
+        <button id="cartBtn" class="relative inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-rose-500 shadow-lg hover:scale-[1.02] transition-transform">
+          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="cartCount" class="text-sm font-semibold">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Search / Filters -->
+    <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+      <input id="searchInput" type="search" placeholder="Search toothpaste, snacks, deodorant..." class="col-span-2 px-4 py-3 rounded-xl bg-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      <div class="flex gap-2 justify-end">
+        <button id="refreshBtn" class="px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Items grid -->
+    <main>
+      <section id="items" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></section>
+    </main>
+  </div>
+
+  <!-- Floating checkout bar -->
+  <div class="fixed left-0 right-0 bottom-6 flex justify-center pointer-events-none">
+    <div class="w-full max-w-4xl px-6 pointer-events-auto">
+      <div class="backdrop-blur-md bg-white/6 border border-white/6 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
+        <div>
+          <div id="summaryText" class="text-sm text-slate-300">No items in cart</div>
+          <div id="summaryPrice" class="text-lg font-bold text-white">0 birr</div>
+        </div>
+        <div class="flex gap-3">
+          <button id="clearCartBtn" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">Clear</button>
+          <button id="checkoutBtn" class="px-5 py-2 rounded-lg bg-gradient-to-r from-rose-500 to-indigo-600 text-white font-semibold shadow-lg">Checkout</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="main.js" type="module"></script>
+  <!-- Cart modal (hidden by default) -->
+  <div id="cartModal" class="fixed inset-0 z-50 hidden items-end md:items-center justify-center">
+    <div class="absolute inset-0 bg-black/60" id="cartBackdrop"></div>
+    <div class="relative w-full max-w-2xl mx-4 md:mx-0 bg-gradient-to-br from-slate-900/80 to-slate-800/80 border border-white/6 rounded-2xl p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Your Cart</h3>
+        <button id="closeCart" class="text-slate-400 hover:text-white">Close</button>
+      </div>
+      <div id="cartList" class="space-y-4 max-h-72 overflow-auto"></div>
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-slate-300">Total</div>
+        <div id="cartTotal" class="text-xl font-bold">0 birr</div>
+      </div>
+      <div class="mt-4 flex justify-end">
+        <button id="modalCheckout" class="px-5 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-rose-500 text-white font-semibold">Place Order</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
 </body>
 </html>

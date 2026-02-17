@@ -1,105 +1,223 @@
-// main.js (ES module)
+// main.js (ES module) — futuristic Tailwind UI interactions
 const API = "https://deliveraau.onrender.com/api";
 let cart = [];
 
-async function loadItems() {
+/* ---------- Utilities ---------- */
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+const formatPrice = (v) => `${Number(v).toLocaleString()} birr`;
+const escapeHtml = (s) => String(s || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+
+/* ---------- DOM refs ---------- */
+const itemsContainer = $("#items");
+const cartBtn = $("#cartBtn");
+const cartCount = $("#cartCount");
+const summaryText = $("#summaryText");
+const summaryPrice = $("#summaryPrice");
+const checkoutBtn = $("#checkoutBtn");
+const clearCartBtn = $("#clearCartBtn");
+const cartModal = $("#cartModal");
+const cartBackdrop = $("#cartBackdrop");
+const closeCart = $("#closeCart");
+const cartList = $("#cartList");
+const cartTotal = $("#cartTotal");
+const modalCheckout = $("#modalCheckout");
+const searchInput = $("#searchInput");
+const refreshBtn = $("#refreshBtn");
+
+/* ---------- Fetch items from API ---------- */
+async function fetchItems() {
   try {
     const res = await fetch(`${API}/asbeza/items`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const items = data.items || [];
-
-    const container = document.getElementById("items");
-    container.innerHTML = "";
-
-    if (items.length === 0) {
-      container.innerHTML = `<p class="empty">No items available right now.</p>`;
-      return;
-    }
-
-    items.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "item-card";
-
-      // Use base_price (matches backend schema)
-      const price = item.base_price ?? item.price ?? 0;
-
-      div.innerHTML = `
-        <div class="item-info">
-          <h2 class="item-name">${escapeHtml(item.name)}</h2>
-          <p class="item-desc">${escapeHtml(item.description || "")}</p>
-          <p class="item-price">${price} birr</p>
-        </div>
-        <div class="item-actions">
-          <button class="add-btn">Add</button>
-        </div>
-      `;
-
-      // Attach click handler
-      div.querySelector(".add-btn").addEventListener("click", () => {
-        addToCart({ ...item, price });
-      });
-
-      container.appendChild(div);
-    });
+    return data.items || [];
   } catch (err) {
-    console.error("Failed to load items:", err);
-    const container = document.getElementById("items");
-    container.innerHTML = `<p class="error">Failed to load items. Try again later.</p>`;
+    console.error("Failed to fetch items:", err);
+    return [];
   }
 }
 
-function addToCart(item) {
-  cart.push(item);
-  // simple UI feedback
-  alert(`${item.name} added to cart`);
+/* ---------- Render items ---------- */
+function renderItems(items) {
+  itemsContainer.innerHTML = "";
+  if (!items.length) {
+    itemsContainer.innerHTML = `<div class="col-span-full text-center text-slate-400">No items available right now.</div>`;
+    return;
+  }
+
+  items.forEach(item => {
+    const price = item.base_price ?? item.price ?? 0;
+    const card = document.createElement("article");
+    card.className = "rounded-2xl p-4 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-white/6 shadow-lg flex flex-col justify-between hover:scale-[1.01] transition-transform";
+
+    card.innerHTML = `
+      <div class="flex items-start gap-4">
+        <div class="w-20 h-20 rounded-xl bg-gradient-to-br from-indigo-600 to-rose-500 flex items-center justify-center text-white text-sm font-bold">
+          ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
+        </div>
+        <div class="flex-1">
+          <h4 class="text-white font-semibold leading-tight">${escapeHtml(item.name)}</h4>
+          <p class="text-slate-400 text-sm mt-1 line-clamp-2">${escapeHtml(item.description || "")}</p>
+        </div>
+      </div>
+
+      <div class="mt-4 flex items-center justify-between">
+        <div class="text-white font-bold">${formatPrice(price)}</div>
+        <div class="flex items-center gap-2">
+          <button class="add-btn inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/6 hover:bg-white/10 transition">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="text-sm text-white">Add</span>
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Add handler
+    card.querySelector(".add-btn").addEventListener("click", () => {
+      addToCart({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price,
+        variant_id: item.variant_id ?? null
+      });
+      pulseCart();
+    });
+
+    itemsContainer.appendChild(card);
+  });
 }
 
-async function checkout() {
+/* ---------- Cart logic ---------- */
+function addToCart(item) {
+  const existing = cart.find(c => c.id === item.id && c.variant_id === item.variant_id);
+  if (existing) existing.quantity += 1;
+  else cart.push({ ...item, quantity: 1 });
+  updateCartUI();
+}
+
+function clearCart() {
+  cart = [];
+  updateCartUI();
+}
+
+function removeCartItem(index) {
+  cart.splice(index, 1);
+  updateCartUI();
+}
+
+function changeQty(index, delta) {
+  cart[index].quantity = Math.max(1, cart[index].quantity + delta);
+  updateCartUI();
+}
+
+function cartSummary() {
+  const total = cart.reduce((s, it) => s + (it.price * (it.quantity || 1)), 0);
+  const count = cart.reduce((s, it) => s + (it.quantity || 1), 0);
+  return { total, count };
+}
+
+function updateCartUI() {
+  const { total, count } = cartSummary();
+  cartCount.textContent = String(count);
+  summaryText.textContent = count ? `${count} item${count>1?'s':''} in cart` : "No items in cart";
+  summaryPrice.textContent = formatPrice(total);
+  cartTotal.textContent = formatPrice(total);
+
+  // render modal list
+  cartList.innerHTML = "";
+  cart.forEach((it, idx) => {
+    const row = document.createElement("div");
+    row.className = "flex items-center justify-between gap-4";
+    row.innerHTML = `
+      <div class="flex-1">
+        <div class="text-white font-medium">${escapeHtml(it.name)}</div>
+        <div class="text-slate-400 text-sm">${escapeHtml(it.quantity)} × ${formatPrice(it.price)}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="qty-btn px-2 py-1 rounded bg-slate-700 text-sm">−</button>
+        <button class="remove-btn px-2 py-1 rounded bg-rose-600 text-sm">Remove</button>
+      </div>
+    `;
+    row.querySelector(".qty-btn").addEventListener("click", () => changeQty(idx, -1));
+    row.querySelector(".remove-btn").addEventListener("click", () => removeCartItem(idx));
+    cartList.appendChild(row);
+  });
+}
+
+/* ---------- UI helpers ---------- */
+function openCart() { cartModal.classList.remove("hidden"); cartModal.classList.add("flex"); }
+function closeCartModal() { cartModal.classList.add("hidden"); cartModal.classList.remove("flex"); }
+function pulseCart() {
+  cartBtn.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 260 });
+}
+
+/* ---------- Checkout flow ---------- */
+async function placeOrder() {
+  if (!cart.length) { alert("Cart is empty"); return; }
+  const tg = window.Telegram?.WebApp;
+  const userId = tg?.initDataUnsafe?.user?.id ?? null;
+
+  const payload = {
+    user_id: userId,
+    items: cart.map(i => ({ variant_id: i.variant_id, quantity: i.quantity, price: i.price }))
+  };
+
   try {
-    const tg = window.Telegram?.WebApp;
-    const userId = tg?.initDataUnsafe?.user?.id ?? null;
-
-    const payload = {
-      user_id: userId,
-      items: cart.map(i => ({
-        variant_id: i.variant_id ?? null,
-        quantity: 1,
-        price: i.price
-      }))
-    };
-
+    modalCheckout.disabled = true;
+    modalCheckout.textContent = "Placing...";
     const res = await fetch(`${API}/asbeza/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Checkout failed: ${res.status} ${text}`);
-    }
-
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const body = await res.json();
-    alert(`Order placed. Upfront: ${body.upfront ?? "N/A"}`);
+    alert(`Order placed — upfront: ${body.upfront ?? "N/A"}`);
+    clearCart();
+    closeCartModal();
     if (tg) tg.close();
   } catch (err) {
-    console.error("Checkout error:", err);
-    alert("Checkout failed. See console for details.");
+    console.error("Checkout failed", err);
+    alert("Checkout failed. Try again.");
+  } finally {
+    modalCheckout.disabled = false;
+    modalCheckout.textContent = "Place Order";
   }
 }
 
-// small helper to avoid XSS when injecting text
-function escapeHtml(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+/* ---------- Events ---------- */
+cartBtn.addEventListener("click", openCart);
+cartBackdrop.addEventListener("click", closeCartModal);
+closeCart.addEventListener("click", closeCartModal);
+clearCartBtn.addEventListener("click", clearCart);
+modalCheckout.addEventListener("click", placeOrder);
+document.getElementById("modalCheckout").addEventListener("click", placeOrder);
+refreshBtn.addEventListener("click", async () => {
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = "Refreshing...";
+  await init(); // reload items
+  refreshBtn.disabled = false;
+  refreshBtn.textContent = "Refresh";
+});
+
+/* Search */
+let lastItems = [];
+searchInput.addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  const filtered = lastItems.filter(i => (i.name || "").toLowerCase().includes(q) || (i.description || "").toLowerCase().includes(q));
+  renderItems(filtered);
+});
+
+/* ---------- Init ---------- */
+async function init() {
+  itemsContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12">Loading…</div>`;
+  const items = await fetchItems();
+  lastItems = items;
+  renderItems(items);
+  updateCartUI();
 }
 
-document.getElementById("checkoutBtn").addEventListener("click", checkout);
-
-// initial load
-loadItems();
+/* Start */
+init();
