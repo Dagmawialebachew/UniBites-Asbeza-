@@ -78,41 +78,67 @@ function renderCheckout() {
     card.className = "rounded-xl bg-slate-800/60 p-4 shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4";
 
     const variantHtml = (item.variants && Array.isArray(item.variants))
-      ? `<select data-idx="${idx}" class="variant-select bg-slate-800 text-sm rounded px-2 py-1">
-           ${item.variants.map(v => `<option value="${escapeHtml(JSON.stringify(v))}" ${v.id === item.variant_id ? "selected" : ""}>${escapeHtml(v.name)} — ${formatPrice(v.price)}</option>`).join("")}
-         </select>`
-      : "";
+  ? `<div class="mt-3 relative">
+       <select data-idx="${idx}" class="variant-select w-full bg-white/5 border border-white/10 text-slate-300 text-[10px] mono uppercase rounded-xl px-3 py-2 outline-none focus:border-orange-500/50 transition-all appearance-none">
+         ${item.variants.map(v => `
+           <option value="${escapeHtml(JSON.stringify(v))}" ${v.id === item.variant_id ? "selected" : ""}>
+             ${escapeHtml(v.name)} — ${formatPrice(v.price)}
+           </option>`).join("")}
+       </select>
+       <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 text-[8px]">
+         <i class="fa-solid fa-chevron-down"></i>
+       </div>
+     </div>`
+  : "";
 
-    card.innerHTML = `
-      <div class="flex-1">
-        <div class="flex items-start gap-3">
-          <div class="w-16 h-16 rounded-lg flex items-center justify-center text-white font-bold"
-               style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2));">
-            ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
-          </div>
-          <div>
-            <div class="font-semibold text-white">${escapeHtml(item.name)}</div>
-            <div class="text-slate-400 text-sm mt-1">${escapeHtml(item.description || "")}</div>
-            <div class="mt-2 text-sm text-slate-300">Unit: ${formatPrice(price)}</div>
-            <div class="mt-2">${variantHtml}</div>
-          </div>
-        </div>
+card.className = "glass-ui rounded-[2rem] p-4 sm:p-6 border-t-white/10 flex flex-col sm:flex-row gap-6 items-center justify-between transition-all";
+
+card.innerHTML = `
+  <div class="flex items-start gap-4 w-full sm:w-auto">
+    <div class="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl font-black italic shadow-glow"
+         style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2));">
+      ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
+    </div>
+    
+    <div class="flex-1">
+      <div class="font-black uppercase italic tracking-tighter text-white text-md leading-none">${escapeHtml(item.name)}</div>
+      <div class="text-slate-500 text-[10px] mono uppercase tracking-widest mt-1 line-clamp-1">${escapeHtml(item.description || "Essential Item")}</div>
+      
+      <div class="flex items-center gap-3 mt-2">
+        <span class="text-[10px] mono text-slate-400 uppercase tracking-tighter">Unit:</span>
+        <span class="text-xs font-bold text-orange-400">${formatPrice(price)}</span>
       </div>
+      
+      ${variantHtml}
+    </div>
+  </div>
 
-      <div class="flex items-center gap-3">
-        <div class="flex items-center bg-slate-700 rounded">
-          <button data-action="dec" data-idx="${idx}" class="px-3 py-2 text-white">−</button>
-          <div class="px-4 text-white font-medium">${qty}</div>
-          <button data-action="inc" data-idx="${idx}" class="px-3 py-2 text-white">+</button>
-        </div>
-        <div class="text-right">
-          <div class="text-white font-bold">${formatPrice(price * qty)}</div>
-          <button data-action="remove" data-idx="${idx}" class="mt-2 text-sm text-rose-400">Remove</button>
-        </div>
-      </div>
-    `;
+  <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-white/5 sm:border-none pt-4 sm:pt-0">
+    <div class="flex items-center bg-white/5 rounded-xl border border-white/10 p-1">
+      <button data-action="dec" data-idx="${idx}" 
+              class="w-10 h-10 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all active:scale-90 flex items-center justify-center">
+        <i class="fa-solid fa-minus text-[10px]"></i>
+      </button>
+      
+      <div class="px-4 text-sm font-black mono text-white">${qty}</div>
+      
+      <button data-action="inc" data-idx="${idx}" 
+              class="w-10 h-10 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all active:scale-90 flex items-center justify-center">
+        <i class="fa-solid fa-plus text-[10px]"></i>
+      </button>
+    </div>
 
-    checkoutItems.appendChild(card);
+    <div class="text-right min-w-[100px]">
+      <div class="text-lg font-black text-white italic tracking-tighter">${formatPrice(price * qty)}</div>
+      <button data-action="remove" data-idx="${idx}" 
+              class="text-[9px] mono uppercase text-rose-500/70 hover:text-rose-400 tracking-widest mt-1 transition-colors">
+        <i class="fa-solid fa-trash-can mr-1"></i> Remove
+      </button>
+    </div>
+  </div>
+`;
+
+checkoutItems.appendChild(card);
   });
 
   // compute delivery fee and totals

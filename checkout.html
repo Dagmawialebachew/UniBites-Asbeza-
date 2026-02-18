@@ -2,183 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
   <title>Checkout · UniBites Asbeza</title>
 
   <link href="/src/style.css" rel="stylesheet" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#020617" />
   <style>
-    :root{
+    :root {
       --brand-grad-1: #FF7A00;
       --brand-grad-2: #FFD200;
       --brand-accent: #E53935;
     }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-950 text-slate-100 antialiased">
+<body class="text-slate-100 antialiased min-h-screen pb-44">
 
-  <div class="max-w-4xl mx-auto px-6 py-10">
-    <header class="flex items-center justify-between mb-8">
-      <div>
-        <h1 class="text-3xl font-extrabold">🧾 Checkout</h1>
-        <p class="text-sm text-slate-400 mt-1">Review your items, change variants or quantities, then place your order.</p>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 relative z-10">
+    
+    <header class="flex items-center justify-between mb-8 glass-ui p-4 sm:p-6 rounded-[2rem] border-t-white/20">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-glow" 
+             style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2));">
+          <i class="fa-solid fa-receipt text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black uppercase tracking-tighter italic">Checkout</h1>
+          <p class="text-[10px] mono text-slate-500 uppercase tracking-widest">Finalize Order</p>
+        </div>
       </div>
-      <a href="/" class="text-sm text-slate-400 hover:text-white">← Back to shop</a>
+      <a href="/" class="px-4 py-2 rounded-xl glass-ui text-[10px] mono uppercase hover:bg-white/10 transition-all border-white/5">
+        <i class="fa-solid fa-arrow-left mr-2"></i> Back
+      </a>
     </header>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
       <section class="lg:col-span-2 space-y-4">
-        <div id="checkoutItems" class="space-y-4"></div>
-        <div id="emptyNotice" class="text-center text-slate-400 py-12 hidden">
-          Your cart is empty. Go back to the shop to add essentials.
+        <div id="checkoutItems" class="space-y-4">
+          </div>
+        
+        <div id="emptyNotice" class="hidden glass-ui rounded-3xl p-12 text-center border-dashed border-white/10">
+          <i class="fa-solid fa-box-open text-4xl text-slate-700 mb-4"></i>
+          <p class="mono text-sm text-slate-400 uppercase tracking-widest">Your cart is empty</p>
+          <a href="/" class="mt-4 inline-block text-orange-500 underline underline-offset-4 text-xs mono">Go back to shop</a>
         </div>
       </section>
 
-      <aside class="rounded-2xl bg-slate-800/60 p-6 shadow-lg">
-        <div class="flex justify-between text-lg">
-          <span>Subtotal</span>
-          <span id="subtotal">0 birr</span>
+      <aside class="space-y-4">
+        <div class="glass-ui rounded-[2rem] p-6 border-t-white/10 sticky top-6">
+          <h2 class="mono text-[10px] text-slate-500 uppercase tracking-[0.2em] mb-6">Order Summary</h2>
+          
+          <div class="space-y-3">
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-400">Subtotal</span>
+              <span id="subtotal" class="font-bold uppercase">0 birr</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-slate-400">Delivery Fee</span>
+              <span id="deliveryFee" class="font-bold uppercase">0 birr</span>
+            </div>
+            <div class="h-[1px] bg-white/5 my-2"></div>
+            <div class="flex justify-between text-sm text-orange-400/80">
+              <span class="mono uppercase text-[10px]">Upfront (40%)</span>
+              <span id="upfront" class="font-bold uppercase">0 birr</span>
+            </div>
+            <div class="flex justify-between text-xl font-black pt-2">
+              <span class="uppercase italic">Total</span>
+              <span id="total" class="text-orange-500 uppercase">0 birr</span>
+            </div>
+          </div>
+
+          <div class="mt-8 space-y-3">
+            <button id="placeOrderBtn" class="w-full py-4 rounded-xl text-black font-black uppercase tracking-widest text-xs shadow-glow active:scale-95 transition-all"
+                    style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));">
+              Place Order
+            </button>
+            <button id="continueBtn" class="w-full py-3 rounded-xl glass-ui text-[10px] text-white mono uppercase hover:bg-white/10 transition-all border-white/5">
+              Continue Shopping
+            </button>
+          </div>
+          
+          <div id="checkoutNote" class="mt-6 text-[10px] text-slate-500 leading-relaxed uppercase mono">
+            Note: Upload upfront payment proof to finish. Admin will confirm via Telegram.
+          </div>
         </div>
-
-        <div class="flex justify-between text-lg text-slate-300 mt-2">
-          <span>Delivery Fee</span>
-          <span id="deliveryFee">0 birr</span>
-        </div>
-
-        <div class="flex justify-between text-lg text-slate-300 mt-2">
-          <span>Upfront (40%)</span>
-          <span id="upfront">0 birr</span>
-        </div>
-
-        <div class="flex justify-between text-xl font-bold mt-4">
-          <span>Total</span>
-          <span id="total">0 birr</span>
-        </div>
-
-        <div class="mt-6 space-y-3">
-          <button id="placeOrderBtn"
-            class="w-full px-6 py-3 rounded-xl text-white font-semibold shadow-lg"
-            style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));">
-            Place Order
-          </button>
-
-          <button id="continueBtn" class="w-full px-6 py-3 rounded-xl text-sm text-slate-900 font-semibold"
-            style="background: linear-gradient(90deg, var(--brand-grad-2), rgba(255,255,255,0.06));">
-            Continue shopping
-          </button>
-        </div>
-
-        <div id="checkoutNote" class="mt-4 text-xs text-slate-400"> Upload your upfront payment screenshot to complete checkout. Your order will be confirmed by admin and you’ll be notified in Telegram. </div>
       </aside>
     </div>
   </div>
 
-  <div id="successOverlay" class="fixed inset-0 z-50 hidden items-center justify-center">
-    <div class="absolute inset-0 bg-black/60"></div>
-    <div class="relative max-w-md w-full mx-4 bg-gradient-to-br from-slate-900/90 to-slate-800/90 border border-white/6 rounded-2xl p-6 shadow-2xl">
-      <div class="text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
-             style="background: linear-gradient(90deg, var(--brand-grad-1), var(--brand-grad-2));">
-          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-       <h3 id="successTitle" class="text-xl font-bold">Order awaiting confirmation</h3>
-<p id="successText" class="text-slate-300 mt-2">We’ve received your order and payment proof. You’ll be notified in Telegram once confirmed.</p>
+  <div id="paymentModal" class="fixed inset-0 z-50 hidden items-center sm:items-center justify-center backdrop-blur-3xl bg-slate-950/60 p-0 sm:p-6">
+    <div id="paymentBackdrop" class="absolute inset-0"></div>
 
-        <div id="successMeta" class="mt-4 text-sm text-slate-400"></div>
-        <div class="mt-6 flex justify-center gap-3">
-          <button id="successClose" class="px-4 py-2 rounded-lg bg-slate-700 text-white">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Payment Upload Modal -->
-<!-- Payment Upload Modal (updated) -->
-<div id="paymentModal" class="fixed inset-0 z-60 hidden items-center justify-center">
-  <div id="paymentBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-
-  <div class="relative w-full max-w-lg mx-4 bg-gradient-to-br from-slate-900/95 to-slate-800/95 border border-white/6 rounded-2xl shadow-2xl">
-  <!-- modal-body: scrollable area -->
-  <div class="modal-body p-6" style="max-height: calc(80vh - 72px); overflow:auto;">
-    <div class="flex items-start gap-4">
-      <div class="w-14 h-14 rounded-lg flex items-center justify-center text-white font-bold"
-           style="background: linear-gradient(90deg, var(--brand-grad-1), var(--brand-grad-2));">
-        💳
-      </div>
-
-      <div class="flex-1">
-        <h3 id="paymentTitle" class="text-lg font-bold">Upload payment screenshot</h3>
-        <p id="paymentSubtitle" class="text-sm text-slate-300 mt-1">
-          Please upload the screenshot of the upfront payment of
-          <span id="upfrontAmount" class="font-semibold"></span>.
-          Your order will be marked awaiting confirmation.
-        </p>
-
-        <!-- Payment instructions (unchanged) -->
-        <div id="paymentInstructions" class="mt-4 rounded-lg bg-slate-900/50 border border-white/6 p-3 text-sm text-slate-300">
-          <div class="font-semibold mb-1">Payment details</div>
-          <div class="grid grid-cols-1 gap-1 text-sm">
-            <div><strong>CBE</strong>: <span class="font-medium">1000649809929</span> — <span class="font-medium">MUKTAR MENSUR AHMED</span></div>
-            <div><strong>Telebirr</strong>: <span class="font-medium">0960306801</span> — <span class="font-medium">Aumar</span></div>
+    <div class="relative w-full max-w-lg glass-ui rounded-t-[2rem] sm:rounded-[2.5rem] overflow-hidden border-t-white/20 shadow-2xl">
+      <div class="modal-body p-6 sm:p-8 overflow-y-auto" style="max-height: 75vh;">
+        <div class="flex items-start gap-4 mb-6">
+          <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center bg-white/5 border border-white/10 text-orange-500">
+            <i class="fa-solid fa-credit-card text-xl"></i>
           </div>
-          <div class="mt-2 text-xs text-slate-400">Tip: Upload a detailed payment screenshot to get a faster confirmation.</div>
+          <div class="flex-1">
+            <h3 id="paymentTitle" class="font-black uppercase tracking-tight italic">Confirm Payment</h3>
+            <p id="paymentSubtitle" class="text-[10px] mono text-slate-500 uppercase mt-1">
+              Please upload screenshot of: <span id="upfrontAmount" class="text-orange-400 font-bold"></span>
+            </p>
+          </div>
+        </div>
 
-          <!-- Confirmation placeholder (hidden until upload succeeds) -->
-          <div id="paymentUploaded" class="mt-3 hidden">
-            <div class="flex items-center gap-3">
-              <div class="w-12 h-12 rounded-md overflow-hidden bg-black/10 flex items-center justify-center">
-                <img id="uploadedThumb" src="" alt="uploaded" class="w-full h-full object-cover" style="max-height:48px;"/>
-              </div>
-              <div>
-                <div class="text-sm font-semibold text-emerald-400">Payment uploaded</div>
-                <div id="uploadedMsg" class="text-xs text-slate-300">Awaiting confirmation from admin.</div>
-              </div>
+        <div id="paymentInstructions" class="space-y-4 bg-black/40 rounded-2xl p-4 border border-white/5 mb-6">
+          <div class="grid grid-cols-1 gap-3 text-[11px] mono">
+            <div class="flex flex-col border-b border-white/5 pb-2">
+              <span class="text-slate-500 uppercase mb-1">CBE Account</span>
+              <span class="text-white font-bold select-all">1000649809929</span>
+              <span class="text-[9px] text-slate-400">MUKTAR MENSUR AHMED</span>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-slate-500 uppercase mb-1">Telebirr</span>
+              <span class="text-white font-bold select-all">0960306801</span>
+              <span class="text-[9px] text-slate-400">Aumar</span>
             </div>
           </div>
         </div>
 
-        <div class="mt-4">
-          <label for="paymentFile" class="block text-sm text-slate-400 mb-2">Payment screenshot</label>
+        <div class="space-y-4">
+          <label for="paymentFile" class="text-[10px] mono text-slate-500 uppercase tracking-widest block ml-1">Receipt Screenshot</label>
           <div class="flex items-center gap-3">
             <input id="paymentFile" type="file" accept="image/*" class="hidden" />
-            <button id="chooseFileBtn" class="px-4 py-2 rounded-lg bg-slate-700 text-white">Choose file</button>
-            <div id="fileName" class="text-sm text-slate-300 truncate max-w-xs">No file chosen</div>
+            <button id="chooseFileBtn" class="flex-1 py-3 rounded-xl glass-ui border-white/10 text-[10px] mono uppercase hover:bg-white/5 transition-all">Choose File</button>
+            <div id="fileName" class="text-[10px] text-slate-500 truncate max-w-[120px] uppercase mono">No file</div>
           </div>
 
-          <!-- Constrained preview container -->
-          <div id="previewWrap" class="mt-4 hidden">
-            <div class="rounded-lg overflow-hidden border border-white/6 bg-black/20 flex items-center justify-center"
-                 style="max-height:320px; width:100%;">
-              <img id="paymentPreview" src="" alt="preview" class="max-h-[320px] w-auto object-contain" style="display:block;" />
-            </div>
-            <div class="mt-2 flex gap-2">
-              <button id="removeFileBtn" class="px-3 py-1 rounded bg-rose-600 text-white text-sm">Remove</button>
-              <button id="replaceFileBtn" class="px-3 py-1 rounded bg-slate-700 text-white text-sm">Replace</button>
+          <div id="previewWrap" class="hidden mt-4 rounded-xl overflow-hidden border border-white/10 bg-black/40 p-2">
+            <img id="paymentPreview" src="" class="w-full h-auto max-h-48 object-contain rounded-lg" />
+            <div class="flex gap-2 mt-2">
+              <button id="removeFileBtn" class="flex-1 py-2 bg-red-500/10 text-red-500 text-[9px] mono uppercase rounded-lg">Remove</button>
+              <button id="replaceFileBtn" class="flex-1 py-2 bg-white/5 text-slate-400 text-[9px] mono uppercase rounded-lg">Replace</button>
             </div>
           </div>
 
-          <div id="paymentError" class="mt-3 text-sm text-rose-400 hidden"></div>
+          <div id="paymentUploaded" class="mt-3 hidden bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex items-center gap-3">
+             <img id="uploadedThumb" src="" class="w-10 h-10 rounded object-cover" />
+             <div>
+               <div class="text-[10px] font-bold text-emerald-400 uppercase">Ready to Submit</div>
+               <div id="uploadedMsg" class="text-[9px] text-slate-400">Screenshot attached successfully.</div>
+             </div>
+          </div>
+
+          <div id="paymentError" class="mt-3 text-[10px] text-rose-400 mono uppercase hidden"></div>
         </div>
+      </div>
+
+      <div class="p-4 bg-slate-900/80 border-t border-white/10 flex gap-3">
+        <button id="cancelPaymentBtn" class="flex-1 py-4 rounded-xl bg-white/5 text-slate-400 mono text-[10px] uppercase tracking-widest">Cancel</button>
+        <button id="confirmPaymentBtn" class="flex-1 py-4 rounded-xl text-black font-black uppercase text-[10px] tracking-widest disabled:opacity-20 transition-all shadow-glow" 
+                style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));" disabled>Confirm Order</button>
       </div>
     </div>
   </div>
 
-  <!-- modal-footer: sticky actions -->
-  <div class="modal-footer p-4 border-t border-white/6 bg-gradient-to-b from-transparent to-slate-900/60 rounded-b-2xl" style="position:sticky; bottom:0; z-index:10;">
-    <div class="flex justify-end gap-3">
-      <button id="cancelPaymentBtn" class="px-4 py-2 rounded-lg bg-slate-700 text-white">Cancel</button>
-      <button id="confirmPaymentBtn" class="px-5 py-2 rounded-lg text-white font-semibold"
-              style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));" disabled>
-        Submit
-      </button>
+  <div id="successOverlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
+    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"></div>
+    <div class="relative max-w-sm w-full glass-ui rounded-[2.5rem] p-8 text-center border-t-white/20 shadow-2xl">
+      <div class="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
+        <i class="fa-solid fa-check text-black text-3xl"></i>
+      </div>
+      <h3 id="successTitle" class="text-2xl font-black uppercase italic tracking-tighter mb-2">Order Sent</h3>
+      <p id="successText" class="text-xs text-slate-400 leading-relaxed uppercase mono">Order received. You will be notified via Telegram once confirmed.</p>
+      <div id="successMeta" class="mt-4 text-[10px] text-orange-500/50 mono uppercase"></div>
+      <button id="successClose" class="mt-8 w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-[0.2em]">Return to Shop</button>
     </div>
   </div>
-</div>
-
-</div>
-
 
   <script type="module" src="/checkout.js"></script>
 </body>
