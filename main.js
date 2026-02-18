@@ -30,16 +30,20 @@ function saveCart() {
     console.warn("Failed to save cart to localStorage", e);
   }
 }
-window.Telegram.WebApp.ready();
-const tg = window.Telegram.WebApp;
-const telegramUserId = tg.initDataUnsafe?.user?.id;
-
-console.log("Telegram User ID:", telegramUserId);
-if (tg?.initDataUnsafe?.user?.id) {
-  localStorage.setItem("ub_user_id", tg.initDataUnsafe.user.id);
+function getQueryParam(name) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(name);
 }
-alert("this is the user id", telegramUserId);
-alert("Full Telegram WebApp Data:", tg.initDataUnsafe);
+
+const telegramUserId = getQueryParam("user_id");
+
+if (telegramUserId) {
+  localStorage.setItem("ub_user_id", telegramUserId);
+  console.log("User ID from query:", telegramUserId);
+  alert("This is the user id: " + telegramUserId);
+} else {
+  console.log("No user_id found in query params");
+}
 
 
 /* ---------- UI Preview Logic ---------- */
