@@ -48,7 +48,7 @@ const UI = {
         if (!url || url === 'undefined') return;
 
         img.src = url;
-        title.textContent = name;
+        title.textContent = localStorage.getItem("ub_user_id");
         
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Lock scroll
