@@ -41,13 +41,16 @@ const UI = {
     },
 
     checkAuth() {
-        const token = localStorage.getItem('admin_token');
-        if (token) {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('adminContent').classList.remove('hidden');
-            this.switchView('analytics');
-        }
-    },
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('adminContent').classList.remove('hidden');
+
+        // Restore last view or default to analytics
+        const lastView = localStorage.getItem('current_view') || 'analytics';
+        this.switchView(lastView);
+    }
+},
 
     async handleLogin() {
         const user = document.getElementById('adminUser').value;
@@ -81,43 +84,58 @@ const UI = {
     },
 
     async switchView(viewId) {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
-        document.getElementById(`${viewId}View`).classList.remove('hidden');
+    // Hide all sections
+    document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`${viewId}View`).classList.remove('hidden');
 
-        document.querySelectorAll('.nav-link').forEach(l => {
-            l.classList.toggle('active', l.dataset.view === viewId);
-            l.classList.toggle('text-slate-400', l.dataset.view !== viewId);
-        });
+    // Update nav links
+    document.querySelectorAll('.nav-link').forEach(l => {
+        l.classList.toggle('active', l.dataset.view === viewId);
+        l.classList.toggle('text-slate-400', l.dataset.view !== viewId);
+    });
 
-        document.getElementById('viewTitle').textContent = `Mission: ${viewId}`;
+    // Update title
+    document.getElementById('viewTitle').textContent = `Mission: ${viewId}`;
 
-        // Dynamic Loading based on View
-        if (viewId === 'analytics') this.loadDashboardData();
-        if (viewId === 'orders') this.loadOrders();
-        if (viewId === 'grocery') this.loadInventory(); // We map 'customers' button to grocery
-    },
+    // Save current view
+    localStorage.setItem('current_view', viewId);
+
+    // Dynamic loading
+    if (viewId === 'analytics') this.loadDashboardData();
+    if (viewId === 'orders') this.loadOrders();
+    if (viewId === 'grocery') this.loadInventory();
+},
 
     async loadDashboardData() {
-        const data = await this.apiRequest('/admin/stats');
-        if (data.status === 'ok') {
-            this.updateQuickStats(data);
-            this.renderTrendChart(data.trend);
-        }
-    },
+    const stats = await this.apiRequest('/admin/stats'); // make sure path matches backend
+    if (stats.status === 'ok') {
+        await this.updateQuickStats(stats);
+        this.renderTrendChart(stats.trend);
+    }
+},
 
-    updateQuickStats(data) {
+    async updateQuickStats(stats) {
         // Revenue from trend
-        const totalRevenue = data.trend.reduce((sum, day) => sum + parseFloat(day.total), 0);
-        
+        const totalRevenue = stats.trend.reduce((sum, day) => sum + parseFloat(day.total), 0);
+
         const elements = {
             revenue: document.getElementById("statRevenue"),
             items: document.getElementById("statItems")
         };
 
         if (elements.revenue) elements.revenue.textContent = totalRevenue.toLocaleString();
-        // Assuming top_selling length as a proxy for 'total types' or update via item list
-        if (elements.items) elements.items.textContent = data.top_selling.length;
+        if (elements.items) elements.items.textContent = stats.top_selling.length;
+
+        // Now fetch orders separately
+        const ordersData = await this.apiRequest('/admin/orders');
+        if (ordersData.status === 'ok') {
+            const pending = ordersData.orders.filter(o => o.status.toLowerCase() === 'pending').length;
+            if (document.getElementById('statPending')) {
+                document.getElementById('statPending').textContent = pending;
+            }
+        }
     },
+
 
     renderTrendChart(trendData) {
         const ctx = document.getElementById('orderTrendChart').getContext('2d');
@@ -163,14 +181,14 @@ const UI = {
         
         // Note: You need a GET /admin/items endpoint in Python
         const data = await this.apiRequest('/asbeza/items'); 
+        console.log("Inventory Data:", data);
         
-        if (data.status === 'ok') {
+        if (data.items) {
             list.innerHTML = data.items.map(item => `
                 <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
                     <td class="p-6">
                         <div class="flex items-center gap-4">
-                            <img src="${item.image_url}" class="w-12 h-12 rounded-xl object-cover border border-white/10">
-                            <div>
+<img src="${item.image_url || ''}" class="w-12 h-12 rounded-xl object-cover border border-white/10">                            <div>
                                 <div class="text-sm font-bold text-white uppercase">${item.name}</div>
                                 <div class="text-[9px] mono text-slate-500 uppercase">UID: ${item.id}</div>
                             </div>
@@ -223,6 +241,7 @@ const UI = {
         
         if (data.status === 'ok') {
             // Update Pending Stat on the fly
+            this.currentOrders = data.orders;
             const pending = data.orders.filter(o => o.status.toLowerCase() === 'pending').length;
             if (document.getElementById('statPending')) {
                 document.getElementById('statPending').textContent = pending;
@@ -252,13 +271,75 @@ const UI = {
     },
 
     async viewOrderDetails(id) {
-        console.log("Fetching manifest for:", id);
+        // 1. Show loading state if you want, or just fetch
         const data = await this.apiRequest(`/admin/orders/${id}`);
-        if (data.status === 'ok') {
-            // Add your modal opening logic here
-            alert(`Order contains ${data.items.length} items. View console for Manifest.`);
-            console.table(data.items);
+        
+        // We also need the base order info (status, date, proof) 
+        // usually found in your main order list
+        const orderSummary = this.currentOrders.find(o => o.id === id);
+
+        if (data.status === 'ok' && orderSummary) {
+            // Fill Header
+            document.getElementById('modalOrderId').textContent = `#${orderSummary.id.toString().slice(-6)}`;
+            document.getElementById('modalOrderDate').textContent = new Date(orderSummary.created_at).toLocaleString();
+            
+            // Set Status Selector
+            document.getElementById('updateStatusSelect').value = orderSummary.status.toLowerCase();
+            
+            // Render Items
+            const itemsList = document.getElementById('modalItemsList');
+            itemsList.innerHTML = data.items.map(item => `
+                <div class="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="text-orange-500 font-black mono text-xs">${item.quantity}x</div>
+                        <div>
+                            <div class="text-[11px] font-bold uppercase tracking-tight">${item.item_name}</div>
+                            <div class="text-[9px] mono text-slate-500">${item.variant_name}</div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] mono font-bold">${item.price * item.quantity} ETB</div>
+                </div>
+            `).join('');
+
+            // Set Proof Image
+            const proofImg = document.getElementById('modalProofImg');
+            proofImg.src = orderSummary.payment_proof_url || "https://placehold.co/400x600?text=No+Receipt+Uploaded";
+            proofImg.onclick = () => window.open(proofImg.src, '_blank');
+
+            // Handle Save Button
+            document.getElementById('saveStatusBtn').onclick = () => this.updateOrderStatus(id);
+
+            // Open Modal
+            document.getElementById('orderModal').classList.remove('hidden');
         }
+    },
+
+    async updateOrderStatus(id) {
+        const newStatus = document.getElementById('updateStatusSelect').value;
+        const btn = document.getElementById('saveStatusBtn');
+        
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> UPDATING';
+        
+        // Note: You need this endpoint in Python
+        const res = await this.apiRequest(`/admin/orders/${id}/status`, {
+            method: 'POST',
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (res.status === 'ok') {
+            btn.textContent = 'SUCCESS';
+            btn.classList.replace('bg-orange-500', 'bg-emerald-500');
+            setTimeout(() => {
+                this.closeModal();
+                this.loadOrders(); // Refresh list
+                btn.classList.replace('bg-emerald-500', 'bg-orange-500');
+                btn.textContent = 'COMMIT CHANGE';
+            }, 1000);
+        }
+    },
+
+    closeModal() {
+        document.getElementById('orderModal').classList.add('hidden');
     },
 
     logout() {
@@ -270,4 +351,5 @@ const UI = {
 
 
 
+window.UI = UI; 
 UI.init();

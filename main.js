@@ -37,6 +37,34 @@ if (tg?.initDataUnsafe?.user?.id) {
 }
 
 
+
+/* ---------- UI Preview Logic ---------- */
+const UI = {
+    openPreview(url, name) {
+        const modal = document.getElementById('imagePreviewModal');
+        const img = document.getElementById('previewFullImg');
+        const title = document.getElementById('previewTitle');
+
+        if (!url || url === 'undefined') return;
+
+        img.src = url;
+        title.textContent = name;
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Lock scroll
+    },
+
+    closePreview() {
+        const modal = document.getElementById('imagePreviewModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto'; // Unlock scroll
+    }
+};
+
+// Also expose closePreview to the window so the HTML 'onclick' can find it
+window.UI = UI;
+
+
 /* ---------- DOM refs ---------- */
 const itemsContainer = $("#items");
 const cartBtn = $("#cartBtn");
@@ -94,28 +122,48 @@ function renderItems(items) {
     const card = document.createElement("article");
     card.className = "rounded-2xl p-4 bg-gradient-to-br from-slate-800/60 to-slate-900/60 border border-white/6 shadow-lg flex flex-col justify-between hover:scale-[1.01] transition-transform";
 
-    card.innerHTML = `
-      <div class="flex items-start gap-4">
-        <div class="w-20 h-20 rounded-xl flex items-center justify-center text-white text-sm font-bold"
-             style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2));">
-          ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
+   card.innerHTML = `
+    <div class="flex flex-col h-full group">
+        <div class="flex-1 pb-3">
+            <div class="flex justify-between items-start gap-2">
+                <h4 class="text-white font-bold text-base leading-tight uppercase tracking-tight">${escapeHtml(item.name)}</h4>
+                <div class="text-orange-500 font-black mono text-sm whitespace-nowrap">${formatPrice(price)}</div>
+            </div>
+            <p class="text-slate-500 text-[10px] leading-relaxed line-clamp-2 mt-1 italic">${escapeHtml(item.description || "Premium Selection")}</p>
         </div>
-        <div class="flex-1">
-          <h4 class="text-white font-semibold leading-tight">${escapeHtml(item.name)}</h4>
-          <p class="text-slate-400 text-sm mt-1 line-clamp-2">${escapeHtml(item.description || "")}</p>
-        </div>
-      </div>
 
-      <div class="mt-4 flex items-center justify-between">
-        <div class="text-white font-bold">${formatPrice(price)}</div>
-        <div class="flex items-center gap-2">
-          <button class="add-btn inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-white/6 hover:bg-white/10 transition">
-            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span class="text-sm text-white">Add</span>
-          </button>
+        <div class="relative mt-auto">
+            <div class="relative h-48 w-full rounded-2xl overflow-hidden border border-white/5 bg-slate-900/50 shadow-inner cursor-zoom-in"
+                 onclick="UI.openPreview('${item.image_url}', '${escapeHtml(item.name)}')">
+                
+                <img 
+                    src="${item.image_url || ''}" 
+                    alt="${escapeHtml(item.name)}"
+                    class="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
+                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                >
+                
+                <div class="hidden absolute inset-0 items-center justify-center text-white/10 text-5xl font-black italic bg-slate-800">
+                    ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
+                </div>
+
+                <div class="absolute top-3 right-3">
+                    <button class="add-btn flex items-center gap-2 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white transition-all duration-300 hover:bg-orange-500 hover:scale-110 active:scale-95 shadow-xl group/btn"
+                            onclick="event.stopPropagation(); /* prevent zoom trigger */">
+                        <svg class="w-4 h-4 transition-transform group-hover/btn:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        <span class="text-[10px] font-black mono uppercase tracking-tighter">ADD</span>
+                    </button>
+                </div>
+
+                <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+            </div>
         </div>
-      </div>
-    `;
+    </div>
+`;
+
+
 
     card.querySelector(".add-btn").addEventListener("click", () => {
   // If the API gives you a variants array, pick the first one as default
@@ -308,6 +356,8 @@ async function init() {
   renderItems(items);
   updateCartUI();
 }
+
+
 
 
 init();
