@@ -31,11 +31,14 @@ function saveCart() {
   }
 }
 
-const tg = window.Telegram?.WebApp;
+const tg = window.Telegram.WebApp;
+const telegramUserId = tg.initDataUnsafe?.user?.id;
+
+console.log("Telegram User ID:", telegramUserId);
 if (tg?.initDataUnsafe?.user?.id) {
   localStorage.setItem("ub_user_id", tg.initDataUnsafe.user.id);
 }
-
+alert("this is the user id", telegramUserId);
 
 
 /* ---------- UI Preview Logic ---------- */
@@ -48,7 +51,7 @@ const UI = {
         if (!url || url === 'undefined') return;
 
         img.src = url;
-        title.textContent = localStorage.getItem("ub_user_id");
+        title.textContent = name;
         
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Lock scroll
