@@ -220,9 +220,10 @@ async function placeOrder(payloadOverride = null) {
   const upfront = Math.floor(total * 0.4);
 
   const tg = window.Telegram?.WebApp;
-const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
+const userIdRaw = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
             ?? localStorage.getItem("ub_user_id") 
             ?? null;
+const userId = userIdRaw ? parseInt(userIdRaw, 10) : null
 
   // base payload
   const basePayload = {

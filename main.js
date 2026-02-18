@@ -40,7 +40,6 @@ const telegramUserId = getQueryParam("user_id");
 if (telegramUserId) {
   localStorage.setItem("ub_user_id", telegramUserId);
   console.log("User ID from query:", telegramUserId);
-  alert("This is the user id: " + telegramUserId);
 } else {
   console.log("No user_id found in query params");
 }
