@@ -1,5 +1,8 @@
 // main.js (ES module) — persist cart to localStorage and redirect Checkout to checkout.html
-const API = "https://deliveraau.onrender.com/api";
+const API =
+  window.location.hostname === "localhost"
+    ? "http://localhost:8000/api"
+    : "https://deliveraau.onrender.com/api";
 
 /* ---------- State ---------- */
 let cart = loadCart(); // load persisted cart on script start

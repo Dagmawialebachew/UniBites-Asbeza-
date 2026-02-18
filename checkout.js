@@ -1,5 +1,8 @@
 // checkout.js (ES module) — reads persisted cart, allows edits, places order with delivery fee
-const API = "https://deliveraau.onrender.com/api";
+const API =
+  window.location.hostname === "localhost"
+    ? "http://localhost:8000/api"
+    : "https://deliveraau.onrender.com/api";
 const STORAGE_KEY = "ub_cart";
 
 /* ---------- Helpers ---------- */
