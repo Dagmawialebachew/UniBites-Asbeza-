@@ -220,7 +220,9 @@ async function placeOrder(payloadOverride = null) {
   const upfront = Math.floor(total * 0.4);
 
   const tg = window.Telegram?.WebApp;
-  const userId = tg?.initDataUnsafe?.user?.id ?? null;
+const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
+            ?? localStorage.getItem("ub_user_id") 
+            ?? null;
 
   // base payload
   const basePayload = {
@@ -525,8 +527,10 @@ confirmPaymentBtn.addEventListener("click", async () => {
     const upfront = Math.floor(total * 0.4);
 
     const tg = window.Telegram?.WebApp;
-    const userId = tg?.initDataUnsafe?.user?.id ?? null;
-
+const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
+            ?? localStorage.getItem("ub_user_id") 
+            ?? null;
+ge"
     const payload = {
       user_id: userId,
       items: cart.map(i => ({

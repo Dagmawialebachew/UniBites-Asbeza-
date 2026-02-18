@@ -31,6 +31,12 @@ function saveCart() {
   }
 }
 
+const tg = window.Telegram?.WebApp;
+if (tg?.initDataUnsafe?.user?.id) {
+  localStorage.setItem("ub_user_id", tg.initDataUnsafe.user.id);
+}
+
+
 /* ---------- DOM refs ---------- */
 const itemsContainer = $("#items");
 const cartBtn = $("#cartBtn");
