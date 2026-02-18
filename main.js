@@ -30,15 +30,14 @@ function saveCart() {
     console.warn("Failed to save cart to localStorage", e);
   }
 }
-
-const tg = window.Telegram.WebApp;
+window.Telegram.WebApp.ready();
 const telegramUserId = tg.initDataUnsafe?.user?.id;
-
-console.log("Telegram User ID:", telegramUserId);
-if (tg?.initDataUnsafe?.user?.id) {
-  localStorage.setItem("ub_user_id", tg.initDataUnsafe.user.id);
+if (telegramUserId) {
+  localStorage.setItem("ub_user_id", telegramUserId);
+  alert("This is the user id: " + telegramUserId);
+} else {
+  alert("No user id found in initDataUnsafe");
 }
-alert("this is the user id", telegramUserId);
 
 
 /* ---------- UI Preview Logic ---------- */
