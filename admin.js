@@ -94,6 +94,7 @@ const UI = {
         // Dynamic Loading based on View
         if (viewId === 'analytics') this.loadDashboardData();
         if (viewId === 'orders') this.loadOrders();
+        if (viewId === 'grocery') this.loadInventory(); // We map 'customers' button to grocery
     },
 
     async loadDashboardData() {
@@ -156,6 +157,64 @@ const UI = {
         });
     },
 
+    async loadInventory() {
+        const list = document.getElementById('inventoryList');
+        list.innerHTML = `<tr><td colspan="4" class="p-20 text-center mono animate-pulse text-orange-500 text-xs">SCANNING STORAGE...</td></tr>`;
+        
+        // Note: You need a GET /admin/items endpoint in Python
+        const data = await this.apiRequest('/asbeza/items'); 
+        
+        if (data.status === 'ok') {
+            list.innerHTML = data.items.map(item => `
+                <tr class="hover:bg-white/[0.02] transition-colors border-b border-white/5">
+                    <td class="p-6">
+                        <div class="flex items-center gap-4">
+                            <img src="${item.image_url}" class="w-12 h-12 rounded-xl object-cover border border-white/10">
+                            <div>
+                                <div class="text-sm font-bold text-white uppercase">${item.name}</div>
+                                <div class="text-[9px] mono text-slate-500 uppercase">UID: ${item.id}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-6 mono text-white text-sm">${item.base_price} ETB</td>
+                    <td class="p-6">
+                        <span class="px-3 py-1 rounded-full bg-white/5 text-[9px] mono text-slate-400">
+                            ${item.variant_count || 0} ACTIVE VARIANTS
+                        </span>
+                    </td>
+                    <td class="p-6 text-right">
+                        <button class="text-slate-500 hover:text-orange-500 transition-colors mr-4"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="text-slate-500 hover:text-red-500 transition-colors"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    },
+
+    async handleAddItem() {
+        // Example logic to collect data for your add_item Python endpoint
+        const productData = {
+            name: document.getElementById('itemName').value,
+            description: document.getElementById('itemDesc').value,
+            base_price: parseFloat(document.getElementById('itemPrice').value),
+            image_url: document.getElementById('itemImg').value,
+            variants: [
+                { name: "Small", price: 100, stock: 50 },
+                { name: "Large", price: 180, stock: 30 }
+            ]
+        };
+
+        const res = await this.apiRequest('/admin/add_item', {
+            method: 'POST',
+            body: JSON.stringify(productData)
+        });
+
+        if (res.status === 'ok') {
+            alert("Product Deployed!");
+            this.loadInventory();
+        }
+    },
+
     async loadOrders() {
         const list = document.getElementById('orderList');
         list.innerHTML = `<tr><td colspan="5" class="p-20 text-center mono animate-pulse text-orange-500 text-xs">UPLINKING TO CORE...</td></tr>`;
@@ -207,5 +266,8 @@ const UI = {
         location.reload();
     }
 };
+
+
+
 
 UI.init();
