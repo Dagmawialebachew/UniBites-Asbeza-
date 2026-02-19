@@ -14,6 +14,7 @@ function loadCart() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
+    
   } catch (e) {
     console.warn("Failed to load cart", e);
     return [];
@@ -22,6 +23,7 @@ function loadCart() {
 
 function saveCart(cart) {
   try {
+    console.log('here is our new way cart happening because of variants', cart)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
   } catch (e) {
     console.warn("Failed to save cart", e);
@@ -60,10 +62,11 @@ function renderCheckout() {
   checkoutItems.innerHTML = "";
   if (!cart.length) {
     emptyNotice.classList.remove("hidden");
-    subtotalEl.textContent = "0 birr";
-    deliveryFeeEl.textContent = "0 birr";
-    upfrontEl.textContent = "0 birr";
-    totalEl.textContent = "0 birr";
+    const zero = formatPrice(0);
+    subtotalEl.textContent = zero;
+    deliveryFeeEl.textContent = zero;
+    upfrontEl.textContent = zero;
+    totalEl.textContent = zero;
     placeOrderBtn.disabled = true;
     return;
   }
@@ -77,84 +80,102 @@ function renderCheckout() {
     const price = Number(item.price || 0);
     subtotal += price * qty;
 
-    const card = document.createElement("div");
-    card.className = "rounded-xl bg-slate-800/60 p-4 shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4";
-
-    const variantHtml = (item.variants && Array.isArray(item.variants))
-  ? `<div class="mt-3 relative">
-       <select data-idx="${idx}" class="variant-select w-full bg-white/5 border border-white/10 text-slate-300 text-[10px] mono uppercase rounded-xl px-3 py-2 outline-none focus:border-orange-500/50 transition-all appearance-none">
-         ${item.variants.map(v => `
-           <option value="${escapeHtml(JSON.stringify(v))}" ${v.id === item.variant_id ? "selected" : ""}>
-             ${escapeHtml(v.name)} — ${formatPrice(v.price)}
-           </option>`).join("")}
-       </select>
-       <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 text-[8px]">
-         <i class="fa-solid fa-chevron-down"></i>
-       </div>
-     </div>`
-  : "";
-
-card.className = "glass-ui rounded-[2rem] p-4 sm:p-6 border-t-white/10 flex flex-col sm:flex-row gap-6 items-center justify-between transition-all";
-
-card.innerHTML = `
-  <div class="flex items-start gap-4 w-full sm:w-auto">
-    <div class="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-xl font-black italic shadow-glow"
-         style="background: linear-gradient(135deg, var(--brand-grad-1), var(--brand-grad-2));">
-      ${escapeHtml((item.name || "").slice(0,2).toUpperCase())}
-    </div>
+    // Find the currently selected variant object to display its name
+    const currentVariant = item.variants?.find(v => v.id === item.variant_id);
     
-    <div class="flex-1">
-      <div class="font-black uppercase italic tracking-tighter text-white text-md leading-none">${escapeHtml(item.name)}</div>
-      <div class="text-slate-500 text-[10px] mono uppercase tracking-widest mt-1 line-clamp-1">${escapeHtml(item.description || "Essential Item")}</div>
-      
-      <div class="flex items-center gap-3 mt-2">
-        <span class="text-[10px] mono text-slate-400 uppercase tracking-tighter">Unit:</span>
-        <span class="text-xs font-bold text-orange-400">${formatPrice(price)}</span>
+    const card = document.createElement("div");
+    card.className = "glass-ui rounded-[2rem] p-5 border-t border-white/10 flex flex-col gap-5 transition-all hover:bg-white/[0.02]";
+
+    // Redesigned Variant Selection: Premium "pill" selector
+    const variantHtml = (item.variants && Array.isArray(item.variants))
+      ? `<div class="mt-2">
+           <div class="flex items-center justify-between px-1 mb-2">
+             <label class="text-[8px] mono text-slate-500 uppercase tracking-[0.2em]">Selected Variant</label>
+             <span class="text-[9px] font-black text-orange-500 uppercase italic tracking-tighter">
+               ${currentVariant ? escapeHtml(currentVariant.name) : 'Standard'}
+             </span>
+           </div>
+           <div class="relative group">
+             <select data-idx="${idx}" class="variant-select w-full bg-white/5 border border-white/5 text-slate-200 text-[11px] font-bold uppercase rounded-2xl px-4 py-3 outline-none focus:border-orange-500/40 transition-all appearance-none cursor-pointer group-hover:bg-white/10">
+               ${item.variants.map(v => `
+                 <option value='${JSON.stringify(v)}' ${v.id === item.variant_id ? "selected" : ""}>
+  ${escapeHtml(v.name)} — ${formatPrice(v.price)}
+</option>
+`).join("")}
+             </select>
+             <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-orange-500 transition-colors">
+               <i class="fa-solid fa-chevron-down text-[8px]"></i>
+             </div>
+           </div>
+         </div>`
+      : "";
+
+    card.innerHTML = `
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4 flex-1 min-w-0">
+          <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-900/40 border border-white/5 relative shadow-inner">
+            <img 
+              src="${item.image_url || ''}" 
+              alt="${escapeHtml(item.name)}"
+class="w-full h-full object-cover transition-opacity duration-300"              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+            >
+            <div class="hidden absolute inset-0 items-center justify-center bg-slate-800 text-white/10 font-black italic text-xl uppercase">
+              ${escapeHtml((item.name || '').slice(0,2))}
+            </div>
+          </div>
+
+          <div class="min-w-0">
+            <div class="font-black uppercase italic tracking-tighter text-white text-md leading-none truncate">${escapeHtml(item.name)}</div>
+            <div class="flex items-center gap-2 mt-1">
+               <span class="text-orange-500 text-[10px] font-black mono">${formatPrice(price)}</span>
+               <span class="w-1 h-1 rounded-full bg-white/10"></span>
+               <span class="text-slate-600 text-[9px] uppercase font-bold tracking-widest">per unit</span>
+            </div>
+          </div>
+        </div>
+
+        <button data-action="remove" data-idx="${idx}" 
+                class="w-10 h-10 rounded-xl bg-rose-500/5 border border-rose-500/10 text-rose-500/30 hover:text-rose-500 hover:bg-rose-500/10 transition-all active:scale-90 flex items-center justify-center">
+          <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
       </div>
-      
+
       ${variantHtml}
-    </div>
-  </div>
 
-  <div class="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-white/5 sm:border-none pt-4 sm:pt-0">
-    <div class="flex items-center bg-white/5 rounded-xl border border-white/10 p-1">
-      <button data-action="dec" data-idx="${idx}" 
-              class="w-10 h-10 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all active:scale-90 flex items-center justify-center">
-        <i class="fa-solid fa-minus text-[10px]"></i>
-      </button>
-      
-      <div class="px-4 text-sm font-black mono text-white">${qty}</div>
-      
-      <button data-action="inc" data-idx="${idx}" 
-              class="w-10 h-10 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all active:scale-90 flex items-center justify-center">
-        <i class="fa-solid fa-plus text-[10px]"></i>
-      </button>
-    </div>
+      <div class="flex items-center justify-between bg-black/40 rounded-[1.5rem] p-1.5 border border-white/5 shadow-xl">
+        <div class="flex items-center bg-white/5 rounded-xl p-1">
+          <button data-action="dec" data-idx="${idx}" 
+                  class="w-9 h-9 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-all active:scale-75 flex items-center justify-center">
+            <i class="fa-solid fa-minus text-[8px]"></i>
+          </button>
+          
+          <div class="px-4 text-xs font-black mono text-white">${qty}</div>
+          
+          <button data-action="inc" data-idx="${idx}" 
+                  class="w-9 h-9 rounded-lg text-slate-500 hover:text-white hover:bg-white/5 transition-all active:scale-75 flex items-center justify-center">
+            <i class="fa-solid fa-plus text-[8px]"></i>
+          </button>
+        </div>
 
-    <div class="text-right min-w-[100px]">
-      <div class="text-lg font-black text-white italic tracking-tighter">${formatPrice(price * qty)}</div>
-      <button data-action="remove" data-idx="${idx}" 
-              class="text-[9px] mono uppercase text-rose-500/70 hover:text-rose-400 tracking-widest mt-1 transition-colors">
-        <i class="fa-solid fa-trash-can mr-1"></i> Remove
-      </button>
-    </div>
-  </div>
-`;
+        <div class="pr-4 text-right">
+          <div class="text-[7px] mono text-slate-600 uppercase tracking-[0.2em] leading-none mb-1">Item Total</div>
+          <div class="text-md font-black text-white italic tracking-tighter uppercase">${formatPrice(price * qty)}</div>
+        </div>
+      </div>
+    `;
 
-checkoutItems.appendChild(card);
+    checkoutItems.appendChild(card);
   });
 
-  // compute delivery fee and totals
   const deliveryFee = computeDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
-  const upfront = Math.floor(total * 0.4); // upfront on total (subtotal + deliveryFee)
+  const upfront = Math.floor(total * 0.4);
 
   subtotalEl.textContent = formatPrice(subtotal);
   deliveryFeeEl.textContent = formatPrice(deliveryFee);
   upfrontEl.textContent = formatPrice(upfront);
   totalEl.textContent = formatPrice(total);
 }
-
 /* ---------- Item actions ---------- */
 function changeQty(idx, delta) {
   if (!cart[idx]) return;
@@ -172,12 +193,21 @@ function removeItem(idx) {
 
 function updateVariant(idx, variantObj) {
   if (!cart[idx]) return;
+  
+  // 1. Update variant ID and price
   cart[idx].variant_id = variantObj.id ?? cart[idx].variant_id;
   if (variantObj.price != null) cart[idx].price = variantObj.price;
+  
+  // 2. IMPORTANT: Update the image_url to the variant's image
+  // Fallback to the original item image if the variant doesn't have one
+  if (variantObj.image_url) {
+    cart[idx].image_url = variantObj.image_url;
+  }
+
+  // 3. Save and re-render
   saveCart(cart);
   renderCheckout();
 }
-
 /* ---------- Event delegation ---------- */
 checkoutItems.addEventListener("click", (e) => {
   const btn = e.target.closest("button[data-action]");
@@ -189,12 +219,13 @@ checkoutItems.addEventListener("click", (e) => {
   if (action === "remove") removeItem(idx);
 });
 
+// This existing listener in your code works perfectly with the fix above:
 checkoutItems.addEventListener("change", (e) => {
   const sel = e.target.closest("select.variant-select");
   if (!sel) return;
   const idx = Number(sel.dataset.idx);
   try {
-    const parsed = JSON.parse(sel.value);
+    const parsed = JSON.parse(sel.value); // parsed contains .image_url
     updateVariant(idx, parsed);
   } catch (err) {
     console.warn("Invalid variant value", err);
