@@ -53,12 +53,12 @@
     </div>
   </header>
 
-  <div class="mb-10 flex items-center gap-3 sm:gap-4">
+  <div id="search-container" class="mb-5 flex items-center gap-3 sm:gap-4">
   <!-- Search -->
   <div class="flex-1 relative group">
     <i class="fa-solid fa-magnifying-glass absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-orange-500 transition-colors"></i>
     <input id="searchInput" type="search" placeholder="SCAN DATABASE..."
-           class="w-full pl-14 pr-6 py-4 sm:py-5 rounded-2xl glass-ui focus:outline-none focus:ring-2 focus:ring-orange-500/40 text-sm sm:text-base mono tracking-widest uppercase placeholder:text-slate-600">
+           class="w-full pl-14 pr-6 py-2 sm:py-2 rounded-2xl glass-ui focus:outline-none focus:ring-2 focus:ring-orange-500/40 text-sm sm:text-base mono tracking-widest uppercase placeholder:text-slate-600">
   </div>
 
   <!-- Refresh -->
@@ -70,7 +70,25 @@
   </button>
 </div>
 
-
+<div class="flex items-center gap-2 mb-8 p-1.5 bg-white/5 border border-white/10 rounded-2xl max-w-md mx-auto sm:mx-0">
+  <button onclick="UI.switchView('store')" id="tab-store" 
+          class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 mono text-[10px] font-black uppercase tracking-widest bg-orange-500 text-black shadow-lg shadow-orange-500/20">
+    <i class="fa-solid fa-store"></i>
+    <span>Store</span>
+  </button>
+  
+  <button onclick="UI.switchView('track')" id="tab-track" 
+          class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5">
+    <i class="fa-solid fa-satellite-dish"></i>
+    <span>Track</span>
+  </button>
+  
+  <button onclick="UI.switchView('settings')" id="tab-settings" 
+          class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5">
+    <i class="fa-solid fa-user-gear"></i>
+    <span>Profile</span>
+  </button>
+</div>
 
 
 
@@ -123,7 +141,7 @@
     </main>
   </div>
 
-<div class="fixed bottom-2 sm:bottom-6 left-0 right-0 px-3 sm:px-6 z-40">
+<div id="checkout-bar" class="fixed bottom-2 sm:bottom-6 left-0 right-0 px-3 sm:px-6 z-40">
   <div class="max-w-5xl mx-auto">
     <div class="glass-ui rounded-xl sm:rounded-2xl p-2 border-white/20 shadow-[0_-10px_30px_rgba(0,0,0,0.4)]">
       <div class="bg-slate-950/90 rounded-lg sm:rounded-xl px-4 py-3 flex items-center justify-between gap-3 sm:gap-6">
@@ -207,22 +225,24 @@
 </div>
 
 
+<section id="view-track" class="hidden animate-in fade-in slide-in-from-bottom-4 space-y-6 px-6">
+    <div class="flex flex-col mb-8 px-2">
+        <h2 class="text-xl sm:text-2xl font-black tracking-tight uppercase leading-none">My Orders</h2>
+        <p class="text-[11px] text-orange-500 uppercase font-bold tracking-wider">Follow your delivery in real-time</p>
+    </div>
 
-<section id="view-track" class="hidden animate-in fade-in slide-in-from-bottom-4">
-    <div class="glass-ui rounded-[2.5rem] p-8 border-t-white/10">
-        <h2 class="text-2xl font-black italic uppercase tracking-tighter mb-6">Active_Transmissions</h2>
-        <div class="bg-white/5 border border-white/5 rounded-3xl p-6 mb-4">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <span class="mono text-orange-500 text-xs">ORDER #UB-9921</span>
-                    <h3 class="text-lg font-bold uppercase mt-1">In Transit</h3>
-                </div>
-                <i class="fa-solid fa-truck-fast text-2xl text-orange-500"></i>
+    <div id="activeOrdersList" class="space-y-4 px-4">
+        <div class="glass-ui rounded-[2.5rem] p-16 text-center border-white/5">
+            <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fa-solid fa-bag-shopping text-3xl text-slate-600"></i>
             </div>
-            <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                <div class="w-[65%] h-full bg-orange-500 shadow-[0_0_15px_#ff7a00]"></div>
-            </div>
-            <p class="mono text-[10px] text-slate-500 mt-4 uppercase tracking-widest">Courier: Abebe Bikila • ETA: 12 MIN</p>
+            <h3 class="text-white font-bold mb-2">No active orders</h3>
+            <p class="text-xs text-slate-500 max-w-[200px] mx-auto leading-relaxed">
+                Items you buy will show up here so you can track them.
+            </p>
+            <button onclick="UI.switchView('store')" class="mt-8 px-8 py-3 bg-orange-500 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-orange-500/20">
+                Start Shopping
+            </button>
         </div>
     </div>
 </section>

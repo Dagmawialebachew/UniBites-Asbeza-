@@ -199,22 +199,7 @@ updateSummaryUI();
 
 // Also expose closePreview to the window so the HTML 'onclick' can find it
 window.UI = UI;
-window.switchTab = function(tabId) {
-    const views = ['view-store', 'view-track', 'view-settings'];
-    views.forEach(id => document.getElementById(id)?.classList.add('hidden'));
-    document.getElementById(`view-${tabId}`)?.classList.remove('hidden');
 
-    // Update Nav Buttons
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('text-orange-500', 'bg-white/5');
-        btn.classList.add('text-slate-500');
-    });
-    
-    // Highlight active
-    const activeBtn = event.currentTarget;
-    activeBtn.classList.add('text-orange-500', 'bg-white/5');
-    activeBtn.classList.remove('text-slate-500');
-};
 
 /* ---------- DOM refs ---------- */
 const itemsContainer = $("#items");
@@ -610,6 +595,119 @@ function updateSummaryUI() {
     if (summaryPriceEl) summaryPriceEl.textContent = formatPrice(total);
     if (cartCountEl) cartCountEl.textContent = String(count);
 }
+
+
+UI.switchView = function(viewId) {
+    // 1. SAVE STATE
+    sessionStorage.setItem('last_view', viewId);
+
+    // 2. Identify the "Global" UI elements exactly
+    const searchBar = document.getElementById('search-container'); 
+    const checkoutBar = document.getElementById('checkout-bar');
+    // const categoryFilters = document.getElementById('category-filters');
+
+    // 3. SAFE HAPTICS
+    if (window.Telegram?.WebApp?.isVersionAtLeast('6.1')) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+
+    // 4. Section Toggling
+    const sections = ['store', 'track', 'settings'];
+    sections.forEach(id => {
+        const el = document.getElementById(`view-${id}`);
+        if (el) el.classList.add('hidden');
+    });
+
+    const target = document.getElementById(`view-${viewId}`);
+    if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('animate-in', 'fade-in');
+    }
+
+    // 5. THE HIDE LOGIC (Aggressive)
+    if (viewId === 'store') {
+        // Show everything for shopping
+        if(searchBar) searchBar.classList.remove('hidden');
+        if(checkoutBar) checkoutBar.classList.remove('hidden');
+        // if(categoryFilters) categoryFilters.classList.remove('hidden');
+    } else {
+        // Hide everything for a clean Track/Profile page
+        if(searchBar) searchBar.classList.add('hidden');
+        if(checkoutBar) checkoutBar.classList.add('hidden');
+        // if(categoryFilters) categoryFilters.classList.add('hidden');
+        
+        if (viewId === 'track') UI.loadUserOrders();
+    }
+
+    // 6. Navigation Visuals
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        const isCurrent = btn.getAttribute('onclick').includes(viewId);
+        btn.classList.toggle('text-orange-500', isCurrent);
+        btn.classList.toggle('text-slate-500', !isCurrent);
+    });
+};
+
+UI.loadUserOrders = async function() {
+    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 12345; // Fallback for dev
+    const container = document.getElementById('activeOrdersList');
+    
+    try {
+        const res = await fetch(`${API}/asbeza/orders?user_id=${userId}`);
+        const data = await res.json();
+        
+        if (!data.orders || data.orders.length === 0) return;
+
+        container.innerHTML = data.orders.map(order => {
+            const statusMap = {
+                'pending': { label: 'Awaiting Confirmation', color: 'text-yellow-500', icon: 'fa-spinner fa-spin', progress: '15%' },
+                'confirmed': { label: 'Order Confirmed', color: 'text-blue-500', icon: 'fa-check-double', progress: '40%' },
+                'processing': { label: 'Packaging Items', color: 'text-purple-500', icon: 'fa-box-archive', progress: '65%' },
+                'in_transit': { label: 'Courier Dispatched', color: 'text-orange-500', icon: 'fa-truck-fast', progress: '85%' },
+                'delivered': { label: 'Deployment Successful', color: 'text-green-500', icon: 'fa-house-circle-check', progress: '100%' }
+            };
+
+            const state = statusMap[order.status] || statusMap['pending'];
+
+            return `
+            <div class="glass-ui rounded-[2.5rem] p-6 border border-white/5 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <span class="mono text-[10px] text-slate-500">ID: #UB-${order.id}</span>
+                        <h3 class="text-xl font-black italic uppercase text-white ${state.color}">${state.label}</h3>
+                    </div>
+                    <i class="fa-solid ${state.icon} text-2xl ${state.color}"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between mono text-[9px] text-slate-500 uppercase">
+                        <span>Transmission Progress</span>
+                        <span>${state.progress}</span>
+                    </div>
+                    <div class="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div class="h-full bg-orange-500 shadow-[0_0_15px_#ff7a00] transition-all duration-1000" style="width: ${state.progress}"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-between items-center border-t border-white/5 pt-4">
+                    <div class="flex gap-4">
+                        <div>
+                            <p class="text-[8px] mono text-slate-500 uppercase">Load</p>
+                            <p class="text-xs font-bold text-white">${order.item_count} Items</p>
+                        </div>
+                        <div>
+                            <p class="text-[8px] mono text-slate-500 uppercase">Total</p>
+                            <p class="text-xs font-bold text-white">${order.total_price} ETB</p>
+                        </div>
+                    </div>
+                    <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl mono text-[9px] font-bold text-slate-300">DETAILS</button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch (e) {
+        container.innerHTML = `<p class="text-red-500 mono text-center">Protocol Error: Unable to sync with server.</p>`;
+    }
+};
+window.UI = window.UI || {};
 
 init();
 
