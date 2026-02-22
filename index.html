@@ -70,7 +70,7 @@
   </button>
 </div>
 
-<div class="flex items-center gap-2 mb-8 p-1.5 bg-white/5 border border-white/10 rounded-2xl max-w-md mx-auto sm:mx-0">
+<div  class="flex nav-item items-center gap-2 mb-8 p-1.5 bg-white/5 border border-white/10 rounded-2xl max-w-md mx-auto sm:mx-0">
   <button onclick="UI.switchView('store')" id="tab-store" 
           class="flex-1 py-3 rounded-xl transition-all flex items-center justify-center gap-2 mono text-[10px] font-black uppercase tracking-widest bg-orange-500 text-black shadow-lg shadow-orange-500/20">
     <i class="fa-solid fa-store"></i>
@@ -225,7 +225,7 @@
 </div>
 
 
-<section id="view-track" class="hidden animate-in fade-in slide-in-from-bottom-4 space-y-6 px-6">
+<section id="view-track" class="hidden animate-in fade-in slide-in-from-bottom-4 space-y-6 px-6 pt-12">
     <div class="flex flex-col mb-8 px-2">
         <h2 class="text-xl sm:text-2xl font-black tracking-tight uppercase leading-none">My Orders</h2>
         <p class="text-[11px] text-orange-500 uppercase font-bold tracking-wider">Follow your delivery in real-time</p>
@@ -247,32 +247,119 @@
     </div>
 </section>
 
-<section id="view-settings" class="hidden animate-in fade-in slide-in-from-bottom-4">
-    <div class="glass-ui rounded-[2.5rem] p-8 border-t-white/10">
-        <div class="flex items-center gap-6 mb-10">
-            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-orange-600 to-yellow-400 p-1">
-                <div class="w-full h-full bg-slate-900 rounded-[1.4rem] flex items-center justify-center">
-                    <i class="fa-solid fa-user text-3xl text-white"></i>
-                </div>
-            </div>
-            <div>
-                <h2 id="userName" class="text-2xl font-black italic uppercase tracking-tighter">Guest_User</h2>
-                <span class="mono text-xs text-orange-500 uppercase">Premium Member</span>
+<section id="view-settings" class="hidden animate-in fade-in slide-in-from-bottom-4 px-6 pt-12 pb-32 overflow-y-auto no-scrollbar">
+    <div class="glass-ui rounded-[2.5rem] p-8 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+        
+        <div class="flex flex-col items-center text-center mb-10">
+            <div class="relative mb-4 group">
+                
+                <div class="relative w-24 h-24 rounded-[2rem] bg-gradient-to-tr from-orange-600 to-yellow-400 p-1">
+    <div class="w-full h-full bg-slate-900 rounded-[1.8rem] flex items-center justify-center border border-white/10 overflow-hidden">
+        <img id="userAvatar" src="" alt="User" class="w-full h-full object-cover">
+    </div>
+</div>
+
+            <h2 id="userName" class="text-3xl font-black italic uppercase tracking-tighter text-white">Guest_User</h2>
+            <div class="flex items-center gap-2 mt-1">
+                <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                <span class="mono text-[10px] text-orange-500 uppercase tracking-widest font-bold">Premium Member</span>
             </div>
         </div>
         
         <div class="space-y-3">
-            <button class="w-full flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
-                <span class="mono text-xs uppercase font-bold group-hover:text-orange-500">Update Delivery Address</span>
-                <i class="fa-solid fa-chevron-right text-slate-600"></i>
+            <p class="mono text-[9px] text-slate-500 uppercase ml-2 mb-2 tracking-[0.2em]">Account Settings</p>
+            
+           
+
+            <button onclick="UI.switchView('track')" class="w-full flex items-center justify-between p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all group">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <span class="mono text-[11px] uppercase font-bold text-slate-200 group-hover:text-white">Order History</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-slate-600 group-hover:translate-x-1 transition-transform"></i>
             </button>
-            <button class="w-full flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
-                <span class="mono text-xs uppercase font-bold group-hover:text-orange-500">Order History</span>
-                <i class="fa-solid fa-chevron-right text-slate-600"></i>
+
+          
+        </div>
+    </div>
+
+    <div class="mt-8 text-center opacity-30">
+        <p class="mono text-[8px] uppercase tracking-widest text-white">Asbeza OS v2.0.4</p>
+    </div>
+</section>
+
+<div id="order-details-modal" class="fixed inset-0 z-[100] hidden flex items-center sm:items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-300">
+    <div class="glass-ui w-full max-w-lg rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-bottom-10">
+        
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-white/5 to-transparent">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                    <h2 class="text-xl font-black italic uppercase text-white tracking-tighter">Order_Receipt</h2>
+                </div>
+                <p id="modal-order-id" class="mono text-[10px] text-slate-500 tracking-tighter uppercase"></p>
+            </div>
+            <button onclick="UI.closeDetails()" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-white hover:bg-red-500/20 hover:text-red-500 transition-all border border-white/5">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-6 max-h-[75vh] overflow-y-auto no-scrollbar">
+            
+            <div class="bg-orange-500/10 border border-orange-500/20 rounded-3xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-black">
+                        <i class="fa-solid fa-bolt-lightning text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] mono text-orange-500 uppercase font-black">Estimated Arrival</p>
+                        <p class="text-sm font-bold text-white uppercase italic">1 - 2 Business Days</p>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-right text-orange-500/30 text-xs"></i>
+            </div>
+
+            <div class="relative">
+                <p class="text-[10px] mono text-slate-500 uppercase mb-3 flex justify-between">
+                    <span>Proof of Payment</span>
+                    <span class="text-orange-500">Verified_Scan</span>
+                </p>
+                <div class="rounded-[2rem] overflow-hidden border border-white/10 bg-slate-900 shadow-inner group relative">
+                    <img id="modal-receipt-img" src="" alt="Receipt" class="w-full h-auto min-h-[150px] object-cover transition-transform duration-700 group-hover:scale-105">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <span class="text-[9px] text-white mono uppercase">View Full Scan</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="p-5 rounded-[2rem] bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                    <p class="text-[9px] mono text-slate-500 uppercase mb-1">Unpaid Balance</p>
+                    <p id="modal-unpaid" class="text-xl font-black text-white italic"></p>
+                </div>
+                <div class="p-5 rounded-[2rem] bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                    <p class="text-[9px] mono text-slate-500 uppercase mb-1">Current State</p>
+                    <p id="modal-status" class="text-xl font-black uppercase italic truncate"></p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-3xl border border-dashed border-white/10">
+                <div class="flex justify-between items-center opacity-60">
+                    <p class="text-[10px] mono text-white uppercase">Carrier Service</p>
+                    <p class="text-[10px] font-bold text-white uppercase italic">Asbeza_Express</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white/5 border-t border-white/5">
+            <button onclick="UI.closeDetails()" class="w-full py-4 bg-white text-black rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-orange-500 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.05)] active:scale-[0.98]">
+                Close Details
             </button>
         </div>
     </div>
-</section>
+</div>
 
 
 

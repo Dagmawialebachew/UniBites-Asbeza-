@@ -579,11 +579,39 @@ searchInput.addEventListener("input", (e) => {
 
 /* ---------- Init ---------- */
 async function init() {
-  itemsContainer.innerHTML = `<div class="col-span-full text-center text-slate-400 py-12">Loading…</div>`;
-  const items = await fetchItems();
-  lastItems = items;
-  renderItems(items);
-  updateCartUI();
+    // 1. Show Glass Skeletons immediately
+    itemsContainer.innerHTML = Array(6).fill(0).map(() => `
+        <div class="glass-ui rounded-[2rem] p-3 border border-white/5 animate-pulse">
+            <div class="h-40 w-full bg-white/5 rounded-[1.5rem] mb-4"></div>
+            <div class="px-2 space-y-3">
+                <div class="h-4 w-2/3 bg-white/10 rounded-full"></div>
+                <div class="h-2 w-1/3 bg-white/5 rounded-full"></div>
+                <div class="flex justify-between items-center pt-4 border-t border-white/5">
+                    <div class="h-6 w-16 bg-white/10 rounded-lg"></div>
+                    <div class="h-8 w-20 bg-white/10 rounded-xl"></div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    try {
+        const items = await fetchItems();
+        lastItems = items;
+        
+        // 2. Small delay to let the skeleton fade out smoothly
+        setTimeout(() => {
+            renderItems(items);
+            updateCartUI();
+        }, 300);
+        
+    } catch (error) {
+        itemsContainer.innerHTML = `
+            <div class="col-span-full text-center py-20">
+                <p class="mono text-orange-500 uppercase text-xs">Sync_Error: Failed to reach server</p>
+                <button onclick="init()" class="mt-4 px-6 py-2 bg-white/5 rounded-full text-[10px] text-white uppercase">Retry Sync</button>
+            </div>
+        `;
+    }
 }
 
 
@@ -595,77 +623,85 @@ function updateSummaryUI() {
     if (summaryPriceEl) summaryPriceEl.textContent = formatPrice(total);
     if (cartCountEl) cartCountEl.textContent = String(count);
 }
-
-
 UI.switchView = function(viewId) {
-    // 1. SAVE STATE
+    // 1. Save state for refresh persistence
     sessionStorage.setItem('last_view', viewId);
 
-    // 2. Identify the "Global" UI elements exactly
-    const searchBar = document.getElementById('search-container'); 
-    const checkoutBar = document.getElementById('checkout-bar');
-    // const categoryFilters = document.getElementById('category-filters');
-
-    // 3. SAFE HAPTICS
-    if (window.Telegram?.WebApp?.isVersionAtLeast('6.1')) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    }
-
-    // 4. Section Toggling
+    // 2. Hide/Show Sections
     const sections = ['store', 'track', 'settings'];
     sections.forEach(id => {
         const el = document.getElementById(`view-${id}`);
-        if (el) el.classList.add('hidden');
+        if (el) {
+            el.classList.add('hidden');
+            el.style.display = 'none';
+        }
     });
 
     const target = document.getElementById(`view-${viewId}`);
     if (target) {
         target.classList.remove('hidden');
-        target.classList.add('animate-in', 'fade-in');
+        target.style.display = 'block';
     }
 
-    // 5. THE HIDE LOGIC (Aggressive)
-    if (viewId === 'store') {
-        // Show everything for shopping
-        if(searchBar) searchBar.classList.remove('hidden');
-        if(checkoutBar) checkoutBar.classList.remove('hidden');
-        // if(categoryFilters) categoryFilters.classList.remove('hidden');
-    } else {
-        // Hide everything for a clean Track/Profile page
-        if(searchBar) searchBar.classList.add('hidden');
-        if(checkoutBar) checkoutBar.classList.add('hidden');
-        // if(categoryFilters) categoryFilters.classList.add('hidden');
-        
-        if (viewId === 'track') UI.loadUserOrders();
-    }
+    // 3. Update Button Styles (The Fix)
+    sections.forEach(id => {
+        const btn = document.getElementById(`tab-${id}`);
+        if (!btn) return;
 
-    // 6. Navigation Visuals
-    document.querySelectorAll('.nav-item').forEach(btn => {
-        const isCurrent = btn.getAttribute('onclick').includes(viewId);
-        btn.classList.toggle('text-orange-500', isCurrent);
-        btn.classList.toggle('text-slate-500', !isCurrent);
+        if (id === viewId) {
+            // Active State: Orange background, Black text
+            btn.classList.add('bg-orange-500', 'text-black', 'shadow-lg', 'shadow-orange-500/20');
+            btn.classList.remove('text-slate-500', 'hover:text-white', 'hover:bg-white/5');
+        } else {
+            // Inactive State: Gray text, transparent background
+            btn.classList.remove('bg-orange-500', 'text-black', 'shadow-lg', 'shadow-orange-500/20');
+            btn.classList.add('text-slate-500', 'hover:text-white', 'hover:bg-white/5');
+        }
     });
+
+    // 4. Global UI Logic
+    const searchBar = document.getElementById('search-container');
+    const checkoutBar = document.getElementById('checkout-bar');
+
+    if (viewId === 'store') {
+        searchBar?.classList.remove('hidden');
+        checkoutBar?.classList.remove('hidden');
+    } else {
+        searchBar?.classList.add('hidden');
+        checkoutBar?.classList.add('hidden');
+        if (viewId === 'track') UI.loadUserOrders();
+        if (viewId === 'settings') UI.loadProfile();
+    }
+
+    window.scrollTo(0, 0);
 };
 
 UI.loadUserOrders = async function() {
-    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 12345; // Fallback for dev
+    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1131741322; // Fallback for dev
     const container = document.getElementById('activeOrdersList');
+    container.innerHTML = `
+        <div class="animate-pulse space-y-4">
+            <div class="h-32 bg-white/5 rounded-[2.5rem]"></div>
+            <div class="h-32 bg-white/5 rounded-[2.5rem]"></div>
+        </div>
+    `;
     
     try {
         const res = await fetch(`${API}/asbeza/orders?user_id=${userId}`);
         const data = await res.json();
+        console.log('here is the data passed', data)
         
         if (!data.orders || data.orders.length === 0) return;
 
         container.innerHTML = data.orders.map(order => {
             const statusMap = {
-                'pending': { label: 'Awaiting Confirmation', color: 'text-yellow-500', icon: 'fa-spinner fa-spin', progress: '15%' },
-                'confirmed': { label: 'Order Confirmed', color: 'text-blue-500', icon: 'fa-check-double', progress: '40%' },
-                'processing': { label: 'Packaging Items', color: 'text-purple-500', icon: 'fa-box-archive', progress: '65%' },
-                'in_transit': { label: 'Courier Dispatched', color: 'text-orange-500', icon: 'fa-truck-fast', progress: '85%' },
-                'delivered': { label: 'Deployment Successful', color: 'text-green-500', icon: 'fa-house-circle-check', progress: '100%' }
+                'pending': { label: 'Awaiting Confirmation', color: 'text-yellow-500', icon: 'fa-spinner fa-spin', progress: '10%' },
+                'processing': { label: 'Order Confirmed', color: 'text-blue-500', icon: 'fa-check-double', progress: '50%' },
+                'shipped': { label: 'On the way', color: 'text-purple-500', icon: 'fa-box-archive', progress: '85%' },
+                'completed': { label: 'Delivered', color: 'text-orange-500', icon: 'fa-truck-fast', progress: '100%' },
+                'cancelled': { label: 'Order cancelled', color: 'text-green-500', icon: 'fa-house-circle-check', progress: '0%' }
             };
-
+        
             const state = statusMap[order.status] || statusMap['pending'];
 
             return `
@@ -698,8 +734,11 @@ UI.loadUserOrders = async function() {
                             <p class="text-[8px] mono text-slate-500 uppercase">Total</p>
                             <p class="text-xs font-bold text-white">${order.total_price} ETB</p>
                         </div>
+                       
                     </div>
-                    <button class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl mono text-[9px] font-bold text-slate-300">DETAILS</button>
+<button onclick='UI.showDetails(${JSON.stringify(order)})' class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl mono text-[9px] font-bold text-slate-300 transition-all active:scale-95">
+    DETAILS
+</button>
                 </div>
             </div>`;
         }).join('');
@@ -707,8 +746,107 @@ UI.loadUserOrders = async function() {
         container.innerHTML = `<p class="text-red-500 mono text-center">Protocol Error: Unable to sync with server.</p>`;
     }
 };
-window.UI = window.UI || {};
 
+UI.showDetails = function(order) {
+    const modal = document.getElementById('order-details-modal');
+    console.log('order', order)
+    
+    // Fill the data
+    document.getElementById('modal-order-id').innerText = `ID: #UB-${order.id}`;
+    document.getElementById('modal-unpaid').innerText = `${order.total_price - order.upfront_paid} ETB`;
+    document.getElementById('modal-status').innerText = order.status;
+    document.getElementById('modal-status').className = `text-lg font-bold uppercase italic ${
+        order.status === 'delivered' ? 'text-green-500' : 'text-orange-500'
+    }`;
+    
+    // Set the Image (Receipt)
+    const imgElement = document.getElementById('modal-receipt-img');
+    if (order.image_url) {
+        imgElement.src = order.image_url;
+        imgElement.parentElement.classList.remove('hidden');
+    } else {
+        imgElement.parentElement.classList.add('hidden');
+    }
+
+    // Show Modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling background
+    
+    if (window.Telegram?.WebApp?.isVersionAtLeast('6.1')) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    }
+};
+
+UI.closeDetails = function() {
+    const modal = document.getElementById('order-details-modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = ''; // Restore scrolling
+};
+
+// Function to get a consistent random avatar for a user
+UI.getAvatar = function(seed) {
+    // 'adventurer' style looks high-end and fits your OS theme
+    return `https://api.dicebear.com/7.x/bottts/svg?seed=${seed}`;
+
+};
+
+
+UI.loadProfile = async function() {
+    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 1131741322;
+    const profileContainer = document.getElementById('view-settings');
+
+    try {
+        const res = await fetch(`${API}/admin/users/${userId}`);
+        const data = await res.json();
+
+        if (data.status === 'ok') {
+            const { user, summary } = data;
+            
+            // 1. Update Profile Header
+            document.getElementById('userName').innerText = user.first_name || "Guest_User";
+            document.getElementById('userAvatar').src = UI.getAvatar(user.id) || '';
+            
+            // 2. Inject Stats Grid (Real Data)
+            const statsGrid = `
+            <div class="grid grid-cols-3 gap-2 mb-8">
+                <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
+                    <p class="text-[8px] mono text-slate-500 uppercase">Orders</p>
+                    <p class="text-sm font-black text-white">${summary.total_orders}</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
+                    <p class="text-[8px] mono text-slate-500 uppercase">Level</p>
+                    <p class="text-sm font-black text-orange-500">${user.level || 1}</p>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
+                    <p class="text-[8px] mono text-slate-500 uppercase">Coins</p>
+                    <p class="text-sm font-black text-yellow-400">${user.coins || 0}</p>
+                </div>
+            </div>`;
+
+            // Insert stats before the action buttons
+            const actionMenu = profileContainer.querySelector('.space-y-3');
+            const existingStats = document.getElementById('profile-stats');
+            if (existingStats) existingStats.remove();
+            
+            const statsWrapper = document.createElement('div');
+            statsWrapper.id = 'profile-stats';
+            statsWrapper.innerHTML = statsGrid;
+            actionMenu.parentNode.insertBefore(statsWrapper, actionMenu);
+        }
+    } catch (e) {
+        console.error("Profile Load Failed", e);
+    }
+};
+
+window.UI = window.UI || {};
+// This runs automatically every time the page loads/refreshes
+document.addEventListener('DOMContentLoaded', () => {
+    // Check where they were, or default to 'store'
+    const lastView = sessionStorage.getItem('last_view') || 'store';
+    
+    // Force the UI to that view
+    UI.switchView(lastView);
+});
 init();
 
 
