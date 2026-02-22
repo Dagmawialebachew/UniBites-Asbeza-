@@ -540,6 +540,7 @@ function showUploadedConfirmation(publicUrl) {
 }
 
 // confirmPaymentBtn uploads screenshot then calls checkout with proof
+// Full replacement for confirmPaymentBtn click handler
 confirmPaymentBtn.addEventListener("click", async () => {
   // --- Guards ---
   if (!selectedFile) {
@@ -555,7 +556,7 @@ confirmPaymentBtn.addEventListener("click", async () => {
   const statusText = document.getElementById("uploadStatusText");
   const abortBtn = document.getElementById("abortUploadBtn");
 
-  // create or reuse a retry button inside progressWrap
+  // ensure retry button exists inside progressWrap
   let retryBtn = document.getElementById("retryUploadBtn");
   if (!retryBtn && progressWrap) {
     retryBtn = document.createElement("button");
@@ -566,43 +567,68 @@ confirmPaymentBtn.addEventListener("click", async () => {
     progressWrap.appendChild(retryBtn);
   }
 
-  // save original button state
-  const originalBtnHtml = confirmPaymentBtn.innerHTML;
+  // --- Playful quotes to keep users engaged ---
+  const quotes = [
+    "Did you know? Asbeza means 'Groceries' in Amharic!",
+    "UniBites: Feeding the future, one byte at a time.",
+    "Fast delivery is our middle name (almost).",
+    "Securing your payment like a pro...",
+    "Our riders are warming up their engines...",
+    "Almost there! Quality takes a few seconds."
+  ];
+  let quoteInterval = null;
+  const startQuotes = () => {
+    if (!statusText) return;
+    statusText.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteInterval = setInterval(() => {
+      statusText.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+    }, 3500);
+  };
+  const stopQuotes = () => {
+    if (quoteInterval) clearInterval(quoteInterval);
+    quoteInterval = null;
+  };
 
-  // helpers to update UI safely
+  // --- UI helpers ---
+  const originalBtnHtml = confirmPaymentBtn.innerHTML;
   const setStatus = (txt) => { if (statusText) statusText.innerText = txt; };
   const setPercent = (n) => {
     if (progressBar) progressBar.style.width = `${n}%`;
     if (percentText) percentText.innerText = `${n}%`;
   };
-  const setProgressColor = (color) => {
+  const setProgressColor = (mode) => {
     if (!progressBar) return;
-    // color can be 'normal' or 'error'
-    if (color === "error") {
+    if (mode === "error") {
       progressBar.style.background = "linear-gradient(90deg,#ef4444,#f97316)"; // red/orange
       progressBar.style.boxShadow = "0 0 10px rgba(239,68,68,0.35)";
     } else {
-      progressBar.style.background = "linear-gradient(90deg,#f97316,#fb923c)"; // original orange
+      progressBar.style.background = "linear-gradient(90deg,#f97316,#fb923c)"; // orange
       progressBar.style.boxShadow = "0 0 10px rgba(249,115,22,0.3)";
     }
   };
 
-  // disable primary UI
+  // --- State & controllers ---
   confirmPaymentBtn.disabled = true;
   confirmPaymentBtn.classList.add("opacity-50", "pointer-events-none");
   if (progressWrap) progressWrap.classList.remove("hidden");
-  setStatus("Preparing upload...");
-  setPercent(0);
-  setProgressColor("normal");
   paymentError.classList.add("hidden");
+  setPercent(5);
+  setProgressColor("normal");
+  startQuotes();
 
-  // XHR controller for aborting
   let currentXhr = null;
   let abortedByUser = false;
+  let checkoutStarted = false;
+  let checkoutController = null; // AbortController for checkout fetch
+  let screenshotUrl = null; // final uploaded URL if upload succeeds
+
   const abortUpload = () => {
     abortedByUser = true;
     if (currentXhr) {
       try { currentXhr.abort(); } catch (e) {}
+    }
+    if (checkoutController) {
+      try { checkoutController.abort(); } catch (e) {}
     }
   };
 
@@ -613,138 +639,103 @@ confirmPaymentBtn.addEventListener("click", async () => {
       abortUpload();
       setStatus("Upload cancelled");
       toast("Upload cancelled.", { type: "info" });
-      // show retry option
       if (retryBtn) retryBtn.classList.remove("hidden");
-      // restore primary button so user can try again
       confirmPaymentBtn.disabled = false;
       confirmPaymentBtn.classList.remove("opacity-50", "pointer-events-none");
+      stopQuotes();
     };
   }
 
-  // upload function with progress and retries
-  async function uploadWithProgress(file, maxRetries = 2, timeoutMs = 90000) {
-    let attempt = 0;
-    while (attempt <= maxRetries) {
-      attempt += 1;
-      setStatus(`Uploading (attempt ${attempt}/${maxRetries + 1})...`);
-      try {
-        const url = await new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          currentXhr = xhr;
-          const fd = new FormData();
-          fd.append("file", file);
+  // upload with progress (single attempt, but returns errors for retry UI)
+  async function uploadWithProgress(file, timeoutMs = 90000) {
+    return await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      currentXhr = xhr;
 
-          // progress
-          xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-              const percent = Math.round((e.loaded / e.total) * 100);
-              setPercent(percent);
-              if (percent < 30) setStatus("Uploading...");
-              else if (percent < 70) setStatus("Securing connection...");
-              else setStatus("Finalizing link...");
-            }
-          };
+      const fd = new FormData();
+      fd.append("file", file);
 
-          // timeout
-          const timer = setTimeout(() => {
-            try { xhr.abort(); } catch (e) {}
-            reject(new Error("Upload timed out"));
-          }, timeoutMs);
-
-          xhr.onload = () => {
-            clearTimeout(timer);
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const res = JSON.parse(xhr.responseText);
-                if (res && res.url) resolve(res.url);
-                else reject(new Error("Invalid upload response"));
-              } catch (err) {
-                reject(new Error("Invalid JSON from upload endpoint"));
-              }
-            } else {
-              reject(new Error(`Upload failed: ${xhr.status}`));
-            }
-          };
-
-          xhr.onerror = () => {
-            clearTimeout(timer);
-            reject(new Error("Network error during upload"));
-          };
-
-          xhr.onabort = () => {
-            clearTimeout(timer);
-            reject(new Error("Upload aborted"));
-          };
-
-          try {
-            xhr.open("POST", uploadUrl);
-            xhr.send(fd);
-          } catch (err) {
-            clearTimeout(timer);
-            reject(err);
+      // progress handler
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setPercent(percent);
+          if (percent < 30) setStatus("Uploading...");
+          else if (percent < 50) setStatus("Securing connection...");
+          else if (percent < 80) setStatus("Finalizing link...");
+          else setStatus("Wrapping up...");
+          // When we hit 50% start checkout in parallel (if not already started)
+          if (percent >= 50 && !checkoutStarted) {
+            // kickoff checkout in parallel (see startCheckoutWithBase64 below)
+            startCheckoutWithBase64();
           }
-        });
-
-        currentXhr = null;
-        return url;
-      } catch (err) {
-        currentXhr = null;
-        if (abortedByUser) throw new Error("Upload cancelled by user");
-        console.warn("Upload attempt failed:", err);
-        // change progress bar to error color briefly
-        setProgressColor("error");
-        setStatus("Upload attempt failed");
-        // small backoff
-        if (attempt <= maxRetries) {
-          await new Promise((r) => setTimeout(r, 800 * attempt));
-          // restore color for retry
-          setProgressColor("normal");
-          continue;
         }
-        // all retries exhausted
-        throw err;
+      };
+
+      // timeout fallback
+      const timer = setTimeout(() => {
+        try { xhr.abort(); } catch (e) {}
+        reject(new Error("Upload timed out"));
+      }, timeoutMs);
+
+      xhr.onload = () => {
+        clearTimeout(timer);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const res = JSON.parse(xhr.responseText);
+            if (res && res.url) {
+              resolve(res.url);
+            } else {
+              reject(new Error("Invalid upload response"));
+            }
+          } catch (err) {
+            reject(new Error("Invalid JSON from upload endpoint"));
+          }
+        } else {
+          reject(new Error(`Upload failed: ${xhr.status}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error("Network error during upload"));
+      };
+
+      xhr.onabort = () => {
+        clearTimeout(timer);
+        reject(new Error("Upload aborted"));
+      };
+
+      try {
+        xhr.open("POST", uploadUrl);
+        xhr.send(fd);
+      } catch (err) {
+        clearTimeout(timer);
+        reject(err);
       }
-    }
-    throw new Error("Upload failed after retries");
+    });
   }
 
-  // main flow: try upload, fallback to base64, then checkout
-  try {
-    let screenshotUrl = null;
-    try {
-      screenshotUrl = await uploadWithProgress(selectedFile, 2, 90000);
-      if (screenshotUrl && screenshotUrl.startsWith("/")) {
-        screenshotUrl = `${location.origin}${screenshotUrl}`;
-      }
-      setPercent(100);
-      setStatus("Upload complete");
-      setProgressColor("normal");
-    } catch (uploadErr) {
-      console.warn("Upload failed, will fallback to base64:", uploadErr);
-      setStatus("Upload failed, preparing fallback...");
-      setProgressColor("error");
-      // show retry button so user can try again without leaving modal
-      if (retryBtn) retryBtn.classList.remove("hidden");
-      // do not throw — allow user to retry or continue with fallback
-    }
-
-    // fallback to base64 if no screenshotUrl
+  // read file as base64 (fast local op) and start checkout
+  async function startCheckoutWithBase64() {
+    if (checkoutStarted) return;
+    checkoutStarted = true;
+    setStatus("Preparing proof for checkout...");
+    // read file as base64 (this is local and usually fast)
     let base64Data = null;
-    if (!screenshotUrl) {
-      setStatus("Encoding image for fallback...");
-      setPercent(30);
+    try {
       base64Data = await new Promise((resolve, reject) => {
         const r = new FileReader();
         r.onload = () => resolve(r.result);
         r.onerror = () => reject(new Error("Failed to read file"));
         r.readAsDataURL(selectedFile);
       });
-      setPercent(60);
-      setStatus("Fallback ready");
+    } catch (err) {
+      console.warn("Base64 read failed, will continue without proof for now", err);
+      base64Data = null;
     }
 
-    // compute totals and prepare payload
-    setStatus("Deploying order...");
+    // compute totals once (use frontend values)
     const subtotal = cart.reduce((s, it) => s + Number(it.price || 0) * (it.quantity || 1), 0);
     const deliveryFee = computeDeliveryFee(subtotal);
     const total = subtotal + deliveryFee;
@@ -756,6 +747,7 @@ confirmPaymentBtn.addEventListener("click", async () => {
       paymentError.textContent = "User identification missing. Please restart the app or try again.";
       paymentError.classList.remove("hidden");
       setStatus("User ID missing");
+      setProgressColor("error");
       if (retryBtn) retryBtn.classList.remove("hidden");
       return;
     }
@@ -763,62 +755,144 @@ confirmPaymentBtn.addEventListener("click", async () => {
     const payload = {
       user_id: userId,
       items: cart.map((i) => ({ variant_id: i.variant_id ?? null, quantity: i.quantity ?? 1, price: i.price })),
-      payment_proof_url: screenshotUrl || null,
-      payment_proof_base64: screenshotUrl ? null : base64Data,
+      payment_proof_url: null,
+      payment_proof_base64: base64Data,
       delivery_fee: deliveryFee,
       total_price: total,
       upfront_paid: upfront
     };
 
-    // call checkout
-    const res = await fetch(`${API}/asbeza/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // start checkout fetch with abort controller
+    checkoutController = new AbortController();
+    setStatus("Registering order...");
+    try {
+      const res = await fetch(`${API}/asbeza/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: checkoutController.signal
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || !body || body.status !== "ok") {
+        const msg = body?.message || `Server error ${res?.status || "unknown"}`;
+        paymentError.textContent = msg;
+        paymentError.classList.remove("hidden");
+        setStatus("Checkout failed");
+        setProgressColor("error");
+        if (retryBtn) retryBtn.classList.remove("hidden");
+        return;
+      }
 
-    const body = await res.json().catch(() => null);
-    if (!res.ok || !body || body.status !== "ok") {
-      // softer UX: show server message and allow retry
-      const msg = body?.message || `Server error ${res?.status || "unknown"}`;
-      paymentError.textContent = msg;
-      paymentError.classList.remove("hidden");
-      setStatus("Checkout failed");
+      // success: show immediate confirmation UI (we still continue upload to get URL for thumbnail)
+      setStatus("Order registered — awaiting confirmation");
+      setPercent(80);
+      // show success overlay later when upload completes or immediately if upload already done
+      // store order id for later UI
+      window.__LAST_ORDER_ID = body.order_id;
+    } catch (err) {
+      if (err.name === "AbortError") {
+        setStatus("Checkout cancelled");
+      } else {
+        console.error("Checkout registration failed", err);
+        paymentError.textContent = err?.message || "Checkout registration failed";
+        paymentError.classList.remove("hidden");
+        setStatus("Checkout failed");
+        setProgressColor("error");
+        if (retryBtn) retryBtn.classList.remove("hidden");
+      }
+    } finally {
+      checkoutController = null;
+    }
+  }
+
+  // --- Main flow: start upload, but checkout will be triggered at 50% via progress handler ---
+  try {
+    // Kick off upload (this will call startCheckoutWithBase64 at 50%)
+    setStatus("Initiating secure upload...");
+    const uploadPromise = uploadWithProgress(selectedFile, 90000)
+      .then((url) => {
+        screenshotUrl = url;
+        if (screenshotUrl && screenshotUrl.startsWith("/")) {
+          screenshotUrl = `${location.origin}${screenshotUrl}`;
+        }
+        // if checkout hasn't started yet (rare), start it now with base64 fallback
+        if (!checkoutStarted) startCheckoutWithBase64();
+        return screenshotUrl;
+      })
+      .catch((uploadErr) => {
+        // upload failed — allow fallback and retry UI
+        console.warn("Upload failed:", uploadErr);
+        setProgressColor("error");
+        setStatus("Upload failed");
+        if (!checkoutStarted) {
+          // start checkout with base64 fallback immediately
+          startCheckoutWithBase64();
+        }
+        // rethrow so outer catch handles UI
+        throw uploadErr;
+      });
+
+    // Wait for upload to finish (but checkout likely already started in parallel)
+    try {
+      await uploadPromise;
+      setPercent(100);
+      setStatus("Upload complete");
+      setProgressColor("normal");
+    } catch (e) {
+      // upload failed — keep modal open and show retry option
+      setStatus("Upload incomplete");
       setProgressColor("error");
       if (retryBtn) retryBtn.classList.remove("hidden");
-      return;
     }
 
-    // success UI
-    setStatus("Success!");
-    setPercent(100);
-    setProgressColor("normal");
-    const finalProofUrl = screenshotUrl || body.payment_proof_url || null;
-    if (finalProofUrl && typeof showUploadedConfirmation === "function") {
-      showUploadedConfirmation(finalProofUrl);
+    // If checkout was started earlier, we already handled its response inside startCheckoutWithBase64.
+    // If it wasn't started for some reason, ensure we start it now.
+    if (!checkoutStarted) {
+      await startCheckoutWithBase64();
     }
 
-    // global success overlay updates (guarded)
-    try {
-      if (typeof successTitle !== "undefined") successTitle.textContent = "Order awaiting confirmation";
-      if (typeof successText !== "undefined") successText.textContent = `Order #${body.order_id} is awaiting confirmation. We'll notify you via Telegram when it's confirmed.`;
-      if (typeof successMeta !== "undefined") successMeta.textContent = `Upfront: ${formatPrice(upfront)} • Delivery: ${formatPrice(deliveryFee)}`;
-      if (typeof successOverlay !== "undefined") {
-        successOverlay.classList.remove("hidden");
-        successOverlay.classList.add("flex");
+    // If checkout succeeded earlier, show final success UI now
+    // Use stored order id if available
+    const orderId = window.__LAST_ORDER_ID ?? null;
+    if (orderId) {
+      stopQuotes();
+      setStatus("Order Confirmed! 🎉");
+      setPercent(100);
+      // show uploaded confirmation thumbnail if we have a URL
+      if (screenshotUrl && typeof showUploadedConfirmation === "function") {
+        showUploadedConfirmation(screenshotUrl);
       }
-    } catch (e) {}
+      // global success overlay updates
+      try {
+        const subtotal = cart.reduce((s, it) => s + Number(it.price || 0) * (it.quantity || 1), 0);
+        const deliveryFee = computeDeliveryFee(subtotal);
+        const total = subtotal + deliveryFee;
+        const upfront = Math.floor(total * 0.4);
 
-    // clear cart and update UI
-    cart = [];
-    if (typeof saveCart === "function") saveCart(cart);
-    if (typeof renderCheckout === "function") renderCheckout();
+        if (typeof successTitle !== "undefined") successTitle.textContent = "Order awaiting confirmation";
+        if (typeof successText !== "undefined") successText.textContent = `Order #${orderId} is awaiting confirmation. We'll notify you via Telegram when it's confirmed.`;
+        if (typeof successMeta !== "undefined") successMeta.textContent = `Upfront: ${formatPrice(upfront)} • Delivery: ${formatPrice(deliveryFee)}`;
+        if (typeof successOverlay !== "undefined") {
+          successOverlay.classList.remove("hidden");
+          successOverlay.classList.add("flex");
+        }
+      } catch (e) { /* non-fatal */ }
 
-    // close modal after short delay
-    setTimeout(() => {
-      if (typeof closePaymentModal === "function") closePaymentModal();
-      if (window.Telegram?.WebApp) try { window.Telegram.WebApp.close(); } catch (e) {}
-    }, 900);
+      // clear cart and update UI
+      cart = [];
+      if (typeof saveCart === "function") saveCart(cart);
+      if (typeof renderCheckout === "function") renderCheckout();
+
+      // close modal after short delay
+      setTimeout(() => {
+        if (typeof closePaymentModal === "function") closePaymentModal();
+        if (window.Telegram?.WebApp) try { window.Telegram.WebApp.close(); } catch (e) {}
+      }, 900);
+    } else {
+      // No order id yet — keep modal open and show retry option
+      setStatus("Waiting for server confirmation...");
+      if (retryBtn) retryBtn.classList.remove("hidden");
+    }
 
   } catch (err) {
     console.error("Payment upload / checkout failed", err);
@@ -833,13 +907,19 @@ confirmPaymentBtn.addEventListener("click", async () => {
     confirmPaymentBtn.classList.remove("opacity-50", "pointer-events-none");
     confirmPaymentBtn.innerHTML = originalBtnHtml;
 
-    // hide retry if success, otherwise keep it visible
+    // wire retry button to re-run the flow without closing modal
     if (retryBtn) {
       retryBtn.onclick = async () => {
-        // hide retry and re-run the click handler flow
         retryBtn.classList.add("hidden");
         paymentError.classList.add("hidden");
         abortedByUser = false;
+        currentXhr = null;
+        checkoutStarted = false;
+        screenshotUrl = null;
+        window.__LAST_ORDER_ID = null;
+        setProgressColor("normal");
+        setPercent(0);
+        startQuotes();
         // re-trigger the same handler logic by calling click programmatically
         confirmPaymentBtn.click();
       };
@@ -852,4 +932,5 @@ confirmPaymentBtn.addEventListener("click", async () => {
     }
   }
 });
+
 
