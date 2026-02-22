@@ -162,23 +162,8 @@
         <button id="confirmPaymentBtn" class="flex-1 py-4 rounded-xl text-black font-black uppercase text-[10px] tracking-widest disabled:opacity-20 transition-all shadow-glow" 
                 style="background: linear-gradient(90deg, var(--brand-accent), var(--brand-grad-1));" disabled>Confirm Order</button>
       </div>
-    </div>
-  </div>
 
-  <div id="successOverlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
-    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"></div>
-    <div class="relative max-w-sm w-full glass-ui rounded-[2.5rem] p-8 text-center border-t-white/20 shadow-2xl">
-      <div class="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
-        <i class="fa-solid fa-check text-black text-3xl"></i>
-      </div>
-      <h3 id="successTitle" class="text-2xl font-black uppercase italic tracking-tighter mb-2">Order Sent</h3>
-      <p id="successText" class="text-xs text-slate-400 leading-relaxed uppercase mono">Order received. You will be notified via Telegram once confirmed.</p>
-      <div id="successMeta" class="mt-4 text-[10px] text-orange-500/50 mono uppercase"></div>
-      <button id="successClose" class="mt-8 w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-[0.2em]">Return to Shop</button>
-    </div>
-  </div>
-
-  <div id="uploadProgressWrap" class="hidden mb-6 px-4 py-6 rounded-3xl bg-white/5 border border-white/10 animate-in fade-in zoom-in duration-300">
+       <div id="uploadProgressWrap" class="hidden mb-6 px-4 py-6 rounded-3xl bg-white/5 border border-white/10 animate-in fade-in zoom-in duration-300">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
             <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
@@ -195,6 +180,23 @@
         Please do not close the app. <br/> Your secure link is being generated.
     </p>
 </div>
+    </div>
+  </div>
+
+  <div id="successOverlay" class="fixed inset-0 z-[100] hidden items-center justify-center p-6">
+    <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"></div>
+    <div class="relative max-w-sm w-full glass-ui rounded-[2.5rem] p-8 text-center border-t-white/20 shadow-2xl">
+      <div class="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
+        <i class="fa-solid fa-check text-black text-3xl"></i>
+      </div>
+      <h3 id="successTitle" class="text-2xl font-black uppercase italic tracking-tighter mb-2">Order Sent</h3>
+      <p id="successText" class="text-xs text-slate-400 leading-relaxed uppercase mono">Order received. You will be notified via Telegram once confirmed.</p>
+      <div id="successMeta" class="mt-4 text-[10px] text-orange-500/50 mono uppercase"></div>
+      <button id="successClose" class="mt-8 w-full py-4 rounded-xl bg-white text-black font-black uppercase text-xs tracking-[0.2em]">Return to Shop</button>
+    </div>
+  </div>
+
+ 
 
   <script type="module" src="/checkout.js"></script>
 </body>
