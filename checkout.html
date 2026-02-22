@@ -178,6 +178,24 @@
     </div>
   </div>
 
+  <div id="uploadProgressWrap" class="hidden mb-6 px-4 py-6 rounded-3xl bg-white/5 border border-white/10 animate-in fade-in zoom-in duration-300">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+            <span id="uploadStatusText" class="text-[10px] mono text-white uppercase tracking-widest font-black">Uploading Payload...</span>
+        </div>
+        <span id="uploadPercent" class="text-[10px] mono text-orange-500 font-black">0%</span>
+    </div>
+    
+    <div class="w-full h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <div id="uploadProgressBar" class="h-full bg-gradient-to-r from-orange-600 to-orange-400 w-0 transition-all duration-300 shadow-[0_0_10px_rgba(249,115,22,0.3)]"></div>
+    </div>
+    
+    <p class="text-[9px] text-slate-500 uppercase font-bold tracking-tight mt-4 text-center leading-relaxed">
+        Please do not close the app. <br/> Your secure link is being generated.
+    </p>
+</div>
+
   <script type="module" src="/checkout.js"></script>
 </body>
 </html>

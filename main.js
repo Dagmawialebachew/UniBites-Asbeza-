@@ -803,12 +803,15 @@ UI.loadProfile = async function() {
             const { user, summary } = data;
             
             // 1. Update Profile Header
-            document.getElementById('userName').innerText = user.first_name || "Guest_User";
-            document.getElementById('userAvatar').src = UI.getAvatar(user.id) || '';
+            const nameEl = document.getElementById('userName');
+            const avatarEl = document.getElementById('userAvatar');
             
-            // 2. Inject Stats Grid (Real Data)
+            if(nameEl) nameEl.innerText = user.first_name || "Guest User";
+            if(avatarEl) avatarEl.src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${user.id}`;
+            
+            // 2. Prepare Stats Grid
             const statsGrid = `
-            <div class="grid grid-cols-3 gap-2 mb-8">
+            <div class="grid grid-cols-3 gap-2 mb-6 px-2">
                 <div class="bg-white/5 rounded-2xl p-3 text-center border border-white/5">
                     <p class="text-[8px] mono text-slate-500 uppercase">Orders</p>
                     <p class="text-sm font-black text-white">${summary.total_orders}</p>
@@ -823,15 +826,11 @@ UI.loadProfile = async function() {
                 </div>
             </div>`;
 
-            // Insert stats before the action buttons
-            const actionMenu = profileContainer.querySelector('.space-y-3');
-            const existingStats = document.getElementById('profile-stats');
-            if (existingStats) existingStats.remove();
-            
-            const statsWrapper = document.createElement('div');
-            statsWrapper.id = 'profile-stats';
-            statsWrapper.innerHTML = statsGrid;
-            actionMenu.parentNode.insertBefore(statsWrapper, actionMenu);
+            // 3. Inject Stats safely
+            const statsTarget = document.getElementById('stats-injection-point');
+            if (statsTarget) {
+                statsTarget.innerHTML = statsGrid;
+            }
         }
     } catch (e) {
         console.error("Profile Load Failed", e);

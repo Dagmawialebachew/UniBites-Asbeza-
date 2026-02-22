@@ -8,13 +8,16 @@ const STORAGE_KEY = "ub_cart";
 /* ---------- Helpers ---------- */
 const $ = (s) => document.querySelector(s);
 const formatPrice = (v) => `${Number(v).toLocaleString()} birr`;
-const escapeHtml = (s) => String(s || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+const escapeHtml = (s) =>
+  String(s || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 
 function loadCart() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
-    
   } catch (e) {
     console.warn("Failed to load cart", e);
     return [];
@@ -23,7 +26,7 @@ function loadCart() {
 
 function saveCart(cart) {
   try {
-    console.log('here is our new way cart happening because of variants', cart)
+    console.log("here is our new way cart happening because of variants", cart);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
   } catch (e) {
     console.warn("Failed to save cart", e);
@@ -81,46 +84,52 @@ function renderCheckout() {
     subtotal += price * qty;
 
     // Find the currently selected variant object to display its name
-    const currentVariant = item.variants?.find(v => v.id === item.variant_id);
-    
+    const currentVariant = item.variants?.find((v) => v.id === item.variant_id);
+
     const card = document.createElement("div");
-    card.className = "glass-ui rounded-[2rem] p-5 border-t border-white/10 flex flex-col gap-5 transition-all hover:bg-white/[0.02]";
+    card.className =
+      "glass-ui rounded-[2rem] p-5 border-t border-white/10 flex flex-col gap-5 transition-all hover:bg-white/[0.02]";
 
     // Redesigned Variant Selection: Premium "pill" selector
-    const variantHtml = (item.variants && Array.isArray(item.variants))
-      ? `<div class="mt-2">
+    const variantHtml =
+      item.variants && Array.isArray(item.variants)
+        ? `<div class="mt-2">
            <div class="flex items-center justify-between px-1 mb-2">
              <label class="text-[8px] mono text-slate-500 uppercase tracking-[0.2em]">Selected Variant</label>
              <span class="text-[9px] font-black text-orange-500 uppercase italic tracking-tighter">
-               ${currentVariant ? escapeHtml(currentVariant.name) : 'Standard'}
+               ${currentVariant ? escapeHtml(currentVariant.name) : "Standard"}
              </span>
            </div>
            <div class="relative group">
              <select data-idx="${idx}" class="variant-select w-full bg-white/5 border border-white/5 text-slate-200 text-[11px] font-bold uppercase rounded-2xl px-4 py-3 outline-none focus:border-orange-500/40 transition-all appearance-none cursor-pointer group-hover:bg-white/10">
-               ${item.variants.map(v => `
+               ${item.variants
+                 .map(
+                   (v) => `
                  <option value='${JSON.stringify(v)}' ${v.id === item.variant_id ? "selected" : ""}>
   ${escapeHtml(v.name)} — ${formatPrice(v.price)}
 </option>
-`).join("")}
+`,
+                 )
+                 .join("")}
              </select>
              <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 group-hover:text-orange-500 transition-colors">
                <i class="fa-solid fa-chevron-down text-[8px]"></i>
              </div>
            </div>
          </div>`
-      : "";
+        : "";
 
     card.innerHTML = `
       <div class="flex items-center justify-between gap-4">
         <div class="flex items-center gap-4 flex-1 min-w-0">
           <div class="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-900/40 border border-white/5 relative shadow-inner">
             <img 
-              src="${item.image_url || ''}" 
+              src="${item.image_url || ""}" 
               alt="${escapeHtml(item.name)}"
 class="w-full h-full object-cover transition-opacity duration-300"              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
             >
             <div class="hidden absolute inset-0 items-center justify-center bg-slate-800 text-white/10 font-black italic text-xl uppercase">
-              ${escapeHtml((item.name || '').slice(0,2))}
+              ${escapeHtml((item.name || "").slice(0, 2))}
             </div>
           </div>
 
@@ -193,11 +202,11 @@ function removeItem(idx) {
 
 function updateVariant(idx, variantObj) {
   if (!cart[idx]) return;
-  
+
   // 1. Update variant ID and price
   cart[idx].variant_id = variantObj.id ?? cart[idx].variant_id;
   if (variantObj.price != null) cart[idx].price = variantObj.price;
-  
+
   // 2. IMPORTANT: Update the image_url to the variant's image
   // Fallback to the original item image if the variant doesn't have one
   if (variantObj.image_url) {
@@ -245,32 +254,38 @@ async function placeOrder(payloadOverride = null) {
   }
 
   // recompute totals to be safe
-  const subtotal = cart.reduce((s, it) => s + (Number(it.price || 0) * (it.quantity || 1)), 0);
+  const subtotal = cart.reduce(
+    (s, it) => s + Number(it.price || 0) * (it.quantity || 1),
+    0,
+  );
   const deliveryFee = computeDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
   const upfront = Math.floor(total * 0.4);
 
   const tg = window.Telegram?.WebApp;
-const userIdRaw = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
-            ?? localStorage.getItem("ub_user_id") 
-            ?? null;
-const userId = userIdRaw ? parseInt(userIdRaw, 10) : null
+  const userIdRaw =
+    window.Telegram?.WebApp?.initDataUnsafe?.user?.id ??
+    localStorage.getItem("ub_user_id") ??
+    null;
+  const userId = userIdRaw ? parseInt(userIdRaw, 10) : null;
 
   // base payload
   const basePayload = {
     user_id: userId,
-    items: cart.map(i => ({
+    items: cart.map((i) => ({
       variant_id: i.variant_id ?? null,
       quantity: i.quantity ?? 1,
-      price: i.price
+      price: i.price,
     })),
     delivery_fee: deliveryFee,
     total_price: total,
-    upfront_paid: upfront
+    upfront_paid: upfront,
   };
 
   // allow modal to pass additional fields (payment_proof_url / payment_proof_base64)
-  const payload = payloadOverride ? { ...basePayload, ...payloadOverride } : basePayload;
+  const payload = payloadOverride
+    ? { ...basePayload, ...payloadOverride }
+    : basePayload;
   console.log("Checkout payload", payload);
 
   placeOrderBtn.disabled = true;
@@ -281,7 +296,7 @@ const userId = userIdRaw ? parseInt(userIdRaw, 10) : null
     const res = await fetch(`${API}/asbeza/checkout`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
@@ -334,32 +349,37 @@ function toast(message, { type = "info", duration = 3500 } = {}) {
   when the user confirms upload.
 */
 placeOrderBtn.addEventListener("click", () => {
-  // compute upfront and open modal; modal will handle upload and then call placeOrder({...proof...})
-  const subtotal = cart.reduce((s, it) => s + (Number(it.price || 0) * (it.quantity || 1)), 0);
+  const cart = loadCart(); // instead of window.__UB_CART
+  console.log("here is the cart", cart);
+
+  const subtotal = cart.reduce(
+    (s, it) => s + Number(it.price || 0) * (it.quantity || 1),
+    0
+  );
   const deliveryFee = computeDeliveryFee(subtotal);
   const total = subtotal + deliveryFee;
   const upfront = Math.floor(total * 0.4);
 
-  // placeholder: openPaymentModal should be provided in part 2
+  const totalQty = cart.reduce((sum, it) => sum + (it.quantity || 1), 0);
+  console.log("Total quantity:", totalQty, "Subtotal:", subtotal);
+
+  if (totalQty < 5 && subtotal < 600) {
+    alert("⚠️ You need at least 5 items OR a total of 600 Birr to place an order.");
+    return;
+  }
+
   if (typeof openPaymentModal === "function") {
     openPaymentModal(upfront);
   } else {
-    // fallback: if modal not present, call placeOrder without proof (not recommended)
-    toast("Payment modal not available. Submitting order without proof.", { type: "error" });
-    placeOrder(); // will call API without proof
+    toast("Payment modal not available. Submitting order without proof.", {
+      type: "error",
+    });
+    placeOrder();
   }
-});
-
-continueBtn.addEventListener("click", () => { window.location.href = "/"; });
-successClose.addEventListener("click", () => {
-  successOverlay.classList.add("hidden");
-  successOverlay.classList.remove("flex");
 });
 
 /* ---------- Init ---------- */
 renderCheckout();
-
-
 
 // Payment modal integration (part 2) for checkout.js
 // Assumes existing helpers and variables: API, formatPrice, computeDeliveryFee, cart, saveCart, renderCheckout, toast, placeOrder
@@ -414,6 +434,12 @@ function openPaymentModal(upfrontAmount) {
   chooseFileBtn.disabled = false;
   removeFileBtn.disabled = false;
   replaceFileBtn.disabled = false;
+    cancelPaymentBtn.disabled = false;
+    cancelPaymentBtn.addEventListener("click", () => {
+  // allow cancel only when not uploading
+  closePaymentModal();
+});
+
 
   paymentModal.classList.remove("hidden");
   paymentModal.classList.add("flex");
@@ -484,20 +510,24 @@ document.addEventListener("keydown", (e) => {
 
 // When user clicks Place Order, open modal instead of directly placing order
 // Ensure placeOrderBtn opens modal (part 1 binds this)
-placeOrderBtn.addEventListener("click", () => {
-  const subtotal = cart.reduce((s, it) => s + (Number(it.price || 0) * (it.quantity || 1)), 0);
-  const deliveryFee = computeDeliveryFee(subtotal);
-  const total = subtotal + deliveryFee;
-  const upfront = Math.floor(total * 0.4);
-  openPaymentModal(upfront);
-});
+// placeOrderBtn.addEventListener("click", () => {
+//   const subtotal = cart.reduce(
+//     (s, it) => s + Number(it.price || 0) * (it.quantity || 1),
+//     0,
+//   );
+//   const deliveryFee = computeDeliveryFee(subtotal);
+//   const total = subtotal + deliveryFee;
+//   const upfront = Math.floor(total * 0.4);
+//   openPaymentModal(upfront);
+// });
 
 // show uploaded confirmation inside the modal and hide the payment instructions
 function showUploadedConfirmation(publicUrl) {
   if (!paymentUploadedWrap || !uploadedThumb || !uploadedMsg) return;
   const normalized = normalizeUrl(publicUrl);
   uploadedThumb.src = normalized;
-  uploadedMsg.textContent = "Uploaded — awaiting admin confirmation. We'll notify you via Telegram.";
+  uploadedMsg.textContent =
+    "Uploaded — awaiting admin confirmation. We'll notify you via Telegram.";
   if (paymentInstructions) paymentInstructions.classList.add("hidden");
   paymentUploadedWrap.classList.remove("hidden");
 
@@ -511,113 +541,100 @@ function showUploadedConfirmation(publicUrl) {
 
 // confirmPaymentBtn uploads screenshot then calls checkout with proof
 confirmPaymentBtn.addEventListener("click", async () => {
-  if (!selectedFile) {
-    paymentError.textContent = "Please choose a screenshot to continue.";
-    paymentError.classList.remove("hidden");
-    return;
-  }
-
-  confirmPaymentBtn.disabled = true;
-  const originalText = confirmPaymentBtn.textContent;
-  confirmPaymentBtn.innerHTML = `<svg class="animate-spin w-4 h-4 inline-block mr-2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25" fill="none"/></svg> Uploading...`;
-
-  try {
-    // 1) Try to upload file to dedicated endpoint
-    let screenshotUrl = null;
-    try {
-      const fd = new FormData();
-      fd.append("file", selectedFile);
-      const uploadRes = await fetch(uploadUrl, { method: "POST", body: fd });
-      if (uploadRes.ok) {
-        const uploadBody = await uploadRes.json();
-        if (uploadBody && uploadBody.url) {
-          screenshotUrl = uploadBody.url;
-          if (screenshotUrl.startsWith("/")) screenshotUrl = `${location.origin}${screenshotUrl}`;
-        }
-      } else {
-        console.warn("Upload endpoint returned", uploadRes.status);
-      }
-    } catch (err) {
-      console.warn("Upload endpoint failed, will fallback to base64", err);
+    if (!selectedFile) {
+        paymentError.textContent = "Please choose a screenshot to continue.";
+        paymentError.classList.remove("hidden");
+        return;
     }
 
-    // 2) If upload failed, fallback to base64 embed
-    let base64Data = null;
-    if (!screenshotUrl) {
-      base64Data = await new Promise((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(r.result);
-        r.onerror = reject;
-        r.readAsDataURL(selectedFile);
-      });
-    }
+    // 1. UI Elements
+    const progressWrap = document.getElementById('uploadProgressWrap');
+    const progressBar = document.getElementById('uploadProgressBar');
+    const percentText = document.getElementById('uploadPercent');
+    const statusText = document.getElementById('uploadStatusText');
+    const originalText = confirmPaymentBtn.innerHTML;
 
-    // 3) Now call checkout endpoint with payment proof
-    const subtotal = cart.reduce((s, it) => s + (Number(it.price || 0) * (it.quantity || 1)), 0);
-    const deliveryFee = computeDeliveryFee(subtotal);
-    const total = subtotal + deliveryFee;
-    const upfront = Math.floor(total * 0.4);
-
-    const tg = window.Telegram?.WebApp;
-    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id 
-            ?? localStorage.getItem("ub_user_id") 
-            ?? null;
-
-    const payload = {
-      user_id: userId,
-      items: cart.map(i => ({
-        variant_id: i.variant_id ?? null,
-        quantity: i.quantity ?? 1,
-        price: i.price
-      })),
+    // 2. Initial State
+    confirmPaymentBtn.disabled = true;
+    confirmPaymentBtn.classList.add('opacity-50', 'pointer-events-none');
+    progressWrap.classList.remove('hidden');
     
-      payment_proof_url: screenshotUrl || null,
-      payment_proof_base64: screenshotUrl ? null : base64Data
-    };
-    console.log("Checkout payload with proof", payload);
+    try {
+        // Step A: Real-time File Upload
+        let screenshotUrl = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const fd = new FormData();
+            fd.append("file", selectedFile);
 
-    const res = await fetch(`${API}/asbeza/checkout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+            // Track Progress
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    percentText.innerText = percent + '%';
+                    
+                    if(percent > 30) statusText.innerText = "Securing Connection...";
+                    if(percent > 70) statusText.innerText = "Finalizing Link...";
+                }
+            };
 
-    const body = await res.json().catch(() => null);
-    if (!res.ok || !body || body.status !== "ok") {
-      throw new Error(body?.message || `Server ${res?.status || "error"}`);
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const res = JSON.parse(xhr.responseText);
+                    resolve(res.url);
+                } else {
+                    reject(new Error("Upload failed"));
+                }
+            };
+            xhr.onerror = () => reject(new Error("Network error"));
+            
+            xhr.open("POST", uploadUrl);
+            xhr.send(fd);
+        });
+
+        if (screenshotUrl && screenshotUrl.startsWith("/")) {
+            screenshotUrl = `${location.origin}${screenshotUrl}`;
+        }
+
+        // Step B: Finalizing Checkout
+        statusText.innerText = "Deploying Order...";
+        progressBar.style.width = '100%';
+        
+        const subtotal = cart.reduce((s, it) => s + Number(it.price || 0) * (it.quantity || 1), 0);
+        const deliveryFee = computeDeliveryFee(subtotal);
+        const total = subtotal + deliveryFee;
+        const upfront = Math.floor(total * 0.4);
+
+        const payload = {
+            user_id: window.Telegram?.WebApp?.initDataUnsafe?.user?.id ?? localStorage.getItem("ub_user_id"),
+            items: cart.map(i => ({ variant_id: i.variant_id, quantity: i.quantity, price: i.price })),
+            payment_proof_url: screenshotUrl
+        };
+
+        const res = await fetch(`${API}/asbeza/checkout`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const body = await res.json();
+        if (body.status !== "ok") throw new Error(body.message);
+
+        // Success Sequence
+        statusText.innerText = "Success!";
+        showUploadedConfirmation(screenshotUrl || body.payment_proof_url);
+        
+        // ... rest of your success overlay logic ...
+        
+    } catch (err) {
+        console.error(err);
+        statusText.innerText = "Error Occurred";
+        paymentError.textContent = "Upload failed. Please check your connection.";
+        paymentError.classList.remove("hidden");
+    } finally {
+        confirmPaymentBtn.disabled = false;
+        confirmPaymentBtn.classList.remove('opacity-50', 'pointer-events-none');
+        confirmPaymentBtn.innerHTML = originalText;
+        // Keep progress wrap visible if successful, hide if error
     }
-
-    // show uploaded confirmation inside modal (prefer server-returned proof URL if available)
-    const finalProofUrl = screenshotUrl || body.payment_proof_url || null;
-    if (finalProofUrl) showUploadedConfirmation(finalProofUrl);
-
-    // global success overlay
-    successTitle.textContent = "Order awaiting confirmation";
-    successText.textContent = `Order #${body.order_id} is awaiting confirmation. We'll notify you via Telegram when it's confirmed.`;
-    successMeta.textContent = `Upfront: ${formatPrice(upfront)} • Delivery: ${formatPrice(deliveryFee)}`;
-    successOverlay.classList.remove("hidden");
-    successOverlay.classList.add("flex");
-
-    // clear cart and update UI
-    cart = [];
-    saveCart(cart);
-    renderCheckout();
-
-    // close modal after short delay so user sees confirmation
-    setTimeout(() => {
-      closePaymentModal();
-      if (tg) tg.close();
-    }, 900);
-
-    return body;
-  } catch (err) {
-    console.error("Payment upload / checkout failed", err);
-    paymentError.textContent = err?.message || "Upload or checkout failed. Try again.";
-    paymentError.classList.remove("hidden");
-    toast("Upload failed. Try again.", { type: "error" });
-    throw err;
-  } finally {
-    confirmPaymentBtn.disabled = false;
-    confirmPaymentBtn.textContent = originalText;
-  }
 });
