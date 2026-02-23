@@ -104,32 +104,64 @@
         
         <section id="analyticsView" class="view-section space-y-10">
           
-          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div class="glass-ui p-6 rounded-3xl border-l-4 border-l-orange-500">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">Net Revenue</p>
-              <h3 class="text-xl font-black italic text-white"><span id="statRevenue">0</span> <span class="text-[10px] opacity-40">ETB</span></h3>
+         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    
+    <div class="glass-ui p-6 rounded-[2rem] border-t-2 border-orange-500 bg-gradient-to-b from-orange-500/[0.05] to-transparent shadow-2xl relative overflow-hidden group">
+        <p class="text-[9px] mono text-orange-500 uppercase tracking-[0.2em] font-black">Total Revenue</p>
+        <div class="flex items-baseline gap-1 mt-4">
+            <h3 class="text-2xl font-black text-white tracking-tighter" id="statRevenue">0</h3>
+            <span class="text-[10px] mono text-slate-500 font-bold">ETB</span>
+        </div>
+        <div class="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+            <i class="fa-solid fa-vault text-5xl"></i>
+        </div>
+    </div>
+
+    <div class="glass-ui p-6 rounded-[2rem] border-t-2 border-emerald-500 bg-gradient-to-b from-emerald-500/[0.05] to-transparent shadow-2xl relative overflow-hidden group">
+        <p class="text-[9px] mono text-emerald-500 uppercase tracking-[0.2em] font-black">Net Profit</p>
+        <div class="flex items-baseline gap-1 mt-4">
+            <h3 class="text-2xl font-black text-emerald-400 tracking-tighter" id="statTotalProfit">0.00</h3>
+            <span class="text-[10px] mono text-slate-500 font-bold">ETB</span>
+        </div>
+        <div class="text-[8px] text-emerald-500/60 mt-1 uppercase font-black tracking-widest">
+            Margin: <span id="statMarginPct" class="text-white">0</span>%
+        </div>
+    </div>
+
+    <div class="glass-ui p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all group">
+        <p class="text-[9px] mono text-slate-500 uppercase tracking-[0.2em] font-bold mb-1">Pending Orders</p>
+        <div class="flex items-center gap-3 mt-4">
+            <h3 class="text-3xl font-black italic text-orange-500" id="statPending">0</h3>
+            <div class="flex-1 h-[2px] bg-white/5 rounded-full overflow-hidden">
+                <div class="bg-orange-500 h-full w-2/3 animate-pulse"></div>
             </div>
-            <div class="glass-ui p-6 rounded-3xl">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">Pending Orders</p>
-              <h3 class="text-xl font-black italic text-orange-500" id="statPending">0</h3>
-            </div>
-            <div class="glass-ui p-6 rounded-3xl">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">Live Inventory</p>
-              <h3 class="text-xl font-black italic text-white" id="statInventory">0</h3>
-            </div>
-            <div class="glass-ui p-6 rounded-3xl">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">Total Users</p>
-              <h3 class="text-xl font-black italic text-white" id="statUsers">0</h3>
-            </div>
-            <div class="glass-ui p-6 rounded-3xl">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">Repeat Rate</p>
-              <h3 class="text-xl font-black italic text-emerald-400"><span id="statRepeat">0</span>%</h3>
-            </div>
-            <div class="glass-ui p-6 rounded-3xl">
-              <p class="text-[9px] mono text-slate-500 uppercase mb-1">AOV</p>
-              <h3 class="text-xl font-black italic text-white" id="statAOV">0</h3>
-            </div>
-          </div>
+        </div>
+    </div>
+
+    <div class="glass-ui p-6 rounded-[2rem] border border-white/5 bg-white/[0.02]">
+        <p class="text-[9px] mono text-slate-500 uppercase tracking-[0.2em] font-bold mb-1">Live Inventory</p>
+        <h3 class="text-2xl font-black text-white mt-4 tracking-tighter" id="statInventory">0</h3>
+        <p class="text-[8px] mono text-slate-600 uppercase mt-1 tracking-tighter italic font-bold">Active SKUs In Stock</p>
+    </div>
+
+    <div class="glass-ui p-6 rounded-[2rem] border border-white/5 bg-white/[0.02]">
+        <p class="text-[9px] mono text-slate-500 uppercase tracking-[0.2em] font-bold mb-1">Total Users</p>
+        <h3 class="text-2xl font-black text-white mt-4 tracking-tighter" id="statUsers">0</h3>
+        <div class="flex gap-1 mt-2">
+            <span class="w-1 h-1 rounded-full bg-emerald-500 animate-ping"></span>
+            <p class="text-[8px] mono text-slate-600 uppercase font-bold tracking-tighter">Verified Uplinks</p>
+        </div>
+    </div>
+
+    <div class="glass-ui p-6 rounded-[2rem] border-l-2 border-sky-500 bg-sky-500/[0.02] relative group">
+        <p class="text-[9px] mono text-slate-500 uppercase tracking-[0.2em] font-bold mb-1">Repeat Rate</p>
+        <div class="flex items-center gap-2 mt-4">
+            <h3 class="text-2xl font-black text-white italic"><span id="statRepeat">0</span>%</h3>
+            <i class="fa-solid fa-arrow-trend-up text-sky-500/40 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+        </div>
+    </div>
+
+</div>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="glass-ui p-8 rounded-[2.5rem]">
@@ -182,13 +214,7 @@
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-1 glass-ui p-8 rounded-[2.5rem] border border-rose-500/10">
-                <h4 class="text-[10px] mono uppercase tracking-[0.2em] text-rose-500 mb-6 flex items-center gap-2">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Stock Alerts
-                </h4>
-                <div id="stockAlertsList" class="space-y-4 max-h-80 overflow-y-auto pr-2">
-                    </div>
-            </div>
+           
             <div class="lg:col-span-2 glass-ui p-8 rounded-[2.5rem]">
                 <h4 class="text-[10px] mono uppercase tracking-[0.2em] text-slate-400 mb-6">Latest Orders Feed</h4>
                 <div id="latestOrdersFeed" class="space-y-3 max-h-80 overflow-y-auto pr-2">
@@ -196,7 +222,13 @@
             </div>
           </div>
         </section>
-
+  <!-- <div class="lg:col-span-1 glass-ui p-8 rounded-[2.5rem] border border-rose-500/10">
+                <h4 class="text-[10px] mono uppercase tracking-[0.2em] text-rose-500 mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Stock Alerts
+                </h4>
+                <div id="stockAlertsList" class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                    </div>
+            </div> -->
     <section id="ordersView" class="view-section hidden">
   <div class="glass-ui rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl">
     
@@ -327,6 +359,11 @@
                         <label class="text-[9px] mono text-slate-500 ml-2">IMAGE URL</label>
                         <input type="text" id="editItemImage" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:border-orange-500 outline-none transition-all">
                     </div>
+        <div class="space-y-1 mt-3">
+    <label class="text-[8px] mono text-slate-500 uppercase ml-1">Category Filter</label>
+    <select id="editItemCategory" class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-xs text-orange-500 focus:border-orange-500 outline-none appearance-none transition-all">
+        </select>
+</div>
                 </div>
             </div>
 
@@ -402,61 +439,78 @@
 
   
 <div id="orderModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
-  <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="UI.closeModal()"></div>
+  <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-xl" onclick="UI.closeModal()"></div>
   
-  <div class="glass-ui relative w-full max-w-2xl max-h-[95vh] overflow-hidden rounded-[2rem] border border-white/10 flex flex-col shadow-2xl">
+  <div class="glass-ui relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[2.5rem] border border-white/10 flex flex-col shadow-2xl">
     
     <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
       <div>
-        <h3 class="text-2xl font-black italic text-white uppercase tracking-tighter" id="modalOrderId">#000000</h3>
-        <p class="text-[10px] mono text-slate-500 uppercase flex items-center gap-2">
-           <i class="fa-regular fa-clock"></i> <span id="modalOrderDate"></span>
+        <div class="flex items-center gap-3">
+          <h3 class="text-3xl font-black text-white tracking-tighter" id="modalOrderId">#000000</h3>
+          <span class="px-2 py-0.5 rounded-md bg-orange-500/10 text-orange-500 mono text-[9px] font-bold animate-pulse">LIVE</span>
+        </div>
+        <p class="text-[10px] mono text-slate-500 uppercase flex items-center gap-2 mt-1">
+           <i class="fa-regular fa-clock"></i> <span id="modalOrderDate">Loading...</span>
         </p>
       </div>
-      <button onclick="UI.closeModal()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-rose-500/20 hover:text-rose-500 transition-all">
+      <button onclick="UI.closeModal()" class="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 hover:bg-rose-500 hover:text-white transition-all duration-300">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
     </div>
 
     <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar">
       
-      <div class="p-4 rounded-2xl bg-orange-500/[0.03] border border-orange-500/10 flex flex-wrap gap-4 items-end justify-between">
-        <div class="space-y-1.5">
-          <p class="text-[9px] mono text-orange-500/70 uppercase tracking-[0.2em] font-bold">Order Status</p>
-          <select id="updateStatusSelect" class="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white mono text-xs outline-none focus:border-orange-500 transition-all cursor-pointer">
-            <option value="pending">PENDING</option>
-            <option value="processing">PROCESSING</option>
-            <option value="shipped">SHIPPED</option>
-            <option value="completed">COMPLETED</option>
-            <option value="cancelled">CANCELLED</option>
-          </select>
-        </div>
-        <button id="saveStatusBtn" class="px-8 py-3 bg-orange-500 text-black font-black mono text-[11px] rounded-xl hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:scale-[1.02] active:scale-95 transition-all">
-          COMMIT CHANGE
-        </button>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="space-y-3">
-          <p class="text-[10px] mono text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2 flex justify-between">
-            Items Manifest <i class="fa-solid fa-list-ul"></i>
-          </p>
-          <div id="modalItemsList" class="space-y-2 max-h-[250px] overflow-y-auto pr-2"></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-5 rounded-3xl bg-white/[0.03] border border-white/5 space-y-3">
+          <p class="text-[10px] mono text-orange-500 font-bold uppercase tracking-wider">Order Status</p>
+          <div class="flex gap-2">
+            <select id="updateStatusSelect" class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-orange-500 transition-all cursor-pointer appearance-none">
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <button id="saveStatusBtn" class="px-4 py-3 bg-orange-500 text-black rounded-xl hover:scale-105 active:scale-95 transition-all">
+              <i class="fa-solid fa-check font-bold"></i>
+            </button>
+          </div>
         </div>
 
-        <div class="space-y-3">
-          <p class="text-[10px] mono text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2 flex justify-between">
-            Transfer Receipt <i class="fa-solid fa-receipt"></i>
-          </p>
-          <div class="group relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 aspect-[4/5] md:aspect-auto">
-            <img id="modalProofImg" src="" class="w-full h-full object-contain cursor-zoom-in group-hover:scale-105 transition-transform duration-500">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-4">
-                <span class="text-[8px] mono text-white">CLICK TO EXPAND</span>
-            </div>
+        <div class="p-5 rounded-3xl bg-white/[0.03] border border-white/5 space-y-3">
+          <p class="text-[10px] mono text-sky-400 font-bold uppercase tracking-wider">Assign Delivery</p>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="assignRiderSelect" class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white text-xs outline-none focus:border-sky-500 transition-all cursor-pointer appearance-none">
+              <option value="">Select Rider...</option>
+            </select>
+            <button id="assignRiderBtn" class="px-4 py-3 bg-sky-600 text-white rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-30">
+              <i class="fa-solid fa-bicycle font-bold"></i>
+            </button>
           </div>
         </div>
       </div>
 
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest border-l-2 border-orange-500 pl-3">Items Ordered</p>
+          <div id="modalItemsList" class="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar text-xs"></div>
+        </div>
+
+        <div class="space-y-4">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest border-l-2 border-sky-500 pl-3">Payment Receipt</p>
+          <div class="group relative rounded-[2rem] overflow-hidden border border-white/10 bg-black/40 aspect-square cursor-pointer" 
+     onclick="UI.viewFullImage()">
+    <img id="modalProofImg" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxAPEA8PDw8PDw8PEA8PDw8PDw8PDw8PFRUWFhUVFRUYHSggGBolHRUVITEhJSkrLi4uFx8zODMtNygtLisBCgoKBQUFDgUFDisZExkrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrK//AABEIALcBEwMBIgACEQEDEQH/xAAYAAEBAQEBAAAAAAAAAAAAAAAAAQIDB//EAB4QAQEBAAIBBQAAAAAAAAAAAAABETHR8EFRcZHB/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/APFKi39QGqRDQakXWbUBaJoC2IACU0BUolBRF0BUoCRUUERaQBCgJVQAABAAFQARQEwVAdaFAUwpgGCmAzYqmABIYCJI0gGIFBBbDAAATDAAqNICAAguAGJWkoMhQBSFARUARQHS8/ZGr2gKJQFAACGgpEgCoagCYpaCKAIp5wUEUwBAAQxUBBTAKioCYWKgC1FBCgCCgOqYtidgGigalaQCAAAAgUwFiAAuIAYFAKBoIGAIKgAACKlBKNICKIAAAIA7Wot5QFRQCQIoJSgAaaaBqRKAuhQEqiAtomrAEVAAAAoCEAAVAEVAAAQAAAG1L6/ICgmgtgi6AIuACJoKCAqACphKAERdAAAABFgmguCaAAAAgAACKAgAOnuFACkSgoAKFQDEUBBUARbAEimAAAAACKgAUAAAABLQAAAQAAAG6JQFhqRQNXUAUQBdEAKGkAAAAgAAFRUBUAAAARQRRAMAAQAVAAEUGr2hQF01FBRDQU1AFRUAVAFNSAKIAVUoAAAAAAAIAaCAogCoAAIBoKC1CgKIoCoAqBoCoAsogCoqaCiAAAKIAAACKACAqGgAAAACAACAtUsMAVMUAUwEFwwEFMBBcASi4AiKYAAAAAgoAmqAgAAAAmgqAACAAA0ACqALEUARQEXAAIABYAIoAJigIABhgAgACUAEAAAAAAoAgAP/2Q==" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <span class="text-[10px] text-white font-bold px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+            VIEW FULL IMAGE
+        </span>
+    </div>
+</div>
+        </div>
+      </div>
+
+   
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
         <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
           <p class="text-[10px] mono text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">Order Summary</p>
@@ -475,25 +529,19 @@
           </div>
         </div>
 
-        <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
-          <p class="text-[10px] mono text-slate-400 uppercase tracking-widest border-b border-white/5 pb-2">User Detail</p>
-          <div class="space-y-2.5 text-xs">
-            <div class="flex justify-between items-center">
-                <span class="text-slate-500 text-[10px] uppercase mono tracking-tighter">Name:</span>
-                <span id="modalUserName" class="text-white font-bold italic"></span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-slate-500 text-[10px] uppercase mono tracking-tighter">Telegram ID:</span>
-                <span id="modalUserTelegram" class="mono"></span>
-            </div>
-            <div class="flex justify-between items-center">
-                <span class="text-slate-500 text-[10px] uppercase mono tracking-tighter">Phone:</span>
-                <span id="modalUserPhone" class="text-white mono"></span>
-            </div>
-            <div class="flex justify-between items-center pt-2">
-                <span class="text-slate-500 text-[10px] uppercase mono tracking-tighter">Campus:</span>
-                <span id="modalUserCampus"></span>
-            </div>
+        <div class="p-5 rounded-[2rem] bg-white/[0.02] border border-white/5 space-y-3">
+          <div class="flex items-center gap-3">
+             <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400">
+                <i class="fa-solid fa-user"></i>
+             </div>
+             <div>
+                <p id="modalUserName" class="text-sm font-bold text-white leading-none"></p>
+                <p id="modalUserTelegram" class="text-[10px] text-sky-400 mt-1"></p>
+             </div>
+          </div>
+          <div class="space-y-1 text-[10px] mono uppercase">
+            <div class="flex justify-between"><span class="text-slate-500">Phone:</span> <span id="modalUserPhone" class="text-white"></span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Campus:</span> <span id="modalUserCampus" class="text-white"></span></div>
           </div>
         </div>
       </div>
@@ -501,6 +549,63 @@
   </div>
 </div>
 
+<div id="addItemModal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[100] hidden flex items-center justify-center p-4">
+    <div class="bg-[#0A0A0A] border border-white/10 w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+            <div>
+                <h2 class="text-white font-black text-xs uppercase tracking-widest">Deploy New Product</h2>
+                <p class="text-[9px] text-slate-500 mono uppercase mt-1">Fill in details to launch on system</p>
+            </div>
+            <button onclick="document.getElementById('addItemModal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white/5 text-white flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-6 custom-scrollbar">
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[8px] mono text-slate-500 uppercase ml-1">Product Name</label>
+                        <input type="text" id="newName" placeholder="e.g. Fresh Tomatoes" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-orange-500 outline-none transition-all">
+                    </div>
+        <div class="space-y-1">
+    <label class="text-[8px] mono text-slate-500 uppercase ml-1">Category</label>
+    <select id="newCategory" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-orange-500 focus:border-orange-500 outline-none appearance-none transition-all">
+        </select>
+</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[8px] mono text-slate-500 uppercase ml-1">Display Price (ETB)</label>
+                        <input type="number" id="newBasePrice" placeholder="0.00" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-orange-500 outline-none transition-all">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[8px] mono text-slate-500 uppercase ml-1">Image URL</label>
+                        <input type="text" id="newImage" placeholder="https://..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-white focus:border-orange-500 outline-none transition-all">
+                    </div>
+                </div>
+
+        
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-[10px] font-black text-white uppercase tracking-tighter">Inventory Variants</h3>
+                    <button onclick="UI.addNewVariantToForm()" class="text-[8px] bg-orange-500/10 text-orange-500 px-3 py-1 rounded-full border border-orange-500/20 hover:bg-orange-500 hover:text-white transition-all">+ Add Variant</button>
+                </div>
+                <div id="newVariantsList" class="space-y-3">
+                    </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white/[0.02] border-t border-white/5">
+            <button id="deployBtn" onclick="UI.deployNewItem()" class="w-full py-3 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] shadow-glow hover:bg-orange-500 hover:text-white transition-all">
+                Confirm Deployment
+            </button>
+        </div>
+    </div>
+</div>
 
   <div id="userModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-black/90 backdrop-blur-xl" onclick="closeUserModal()"></div>
@@ -552,5 +657,12 @@
       </div>
 
 <script type="module" src="admin.js"></script>
+
+<div id="imageLightbox" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl cursor-zoom-out" onclick="this.classList.add('hidden')">
+    <img id="lightboxImg" src="" class="max-w-full max-h-full rounded-xl shadow-2xl transition-transform duration-300">
+    <button class="absolute top-6 right-6 text-white/50 hover:text-white">
+        <i class="fa-solid fa-xmark text-2xl"></i>
+    </button>
+</div>
 </body>
 </html>

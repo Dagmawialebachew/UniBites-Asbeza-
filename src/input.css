@@ -51,3 +51,10 @@
   ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
   ::-webkit-scrollbar-thumb { background: var(--brand-orange); border-radius: 10px; }
 }
+
+@keyframes scan { from { transform: translateY(-100%); } to { transform: translateY(100%); } }
+.scan-line { animation: scan 2s linear infinite; }
+#orderBadge {
+    box-shadow: 0 0 10px #ef4444;
+    z-index: 20;
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
+  <title>UniBites · Rider OS</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <link rel="stylesheet" href="src/style.css">
+</head>
+
+<body class="text-slate-100 antialiased min-h-screen pb-44">
+  <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+  <div class="max-w-6xl mx-auto px-4 pt-6 relative z-10">
+    <header class="flex items-center justify-between py-6 mb-4">
+      <div class="flex items-center gap-4 group">
+        <div class="relative w-12 h-12 flex-shrink-0">
+          <div class="absolute inset-0 bg-orange-500/10 rounded-xl blur-lg"></div>
+          <div class="relative w-full h-full bg-slate-950 border border-white/10 rounded-xl flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/10 to-transparent -translate-y-full scan-line"></div>
+            <img src="/assets/unibites-logo.png" alt="Logo" class="w-7 h-7 object-contain relative z-10" />
+          </div>
+        </div>
+        <div class="flex flex-col">
+          <h1 class="text-xl font-black tracking-tight uppercase leading-none">Rider<span class="text-orange-500 ml-1">Terminal</span></h1>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+            <span id="dgName" class="text-[10px] text-slate-500 uppercase font-bold tracking-wider italic">Linking...</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="location.reload()" class="p-3 rounded-xl glass-ui hover:text-orange-500 transition-all active:scale-95">
+        <i class="fa-solid fa-arrows-rotate"></i>
+      </button>
+    </header>
+
+    <main id="view-orders"><section id="ordersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></section></main>
+    <main id="view-stats" class="hidden"><div id="statsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></main>
+    <main id="view-profile" class="hidden"><div id="profileDetails" class="max-w-2xl mx-auto glass-ui rounded-[2.5rem] p-2"></div></main>
+
+    <nav class="fixed bottom-6 left-4 right-4 z-50">
+      <div class="max-w-md mx-auto glass-ui rounded-[2.2rem] p-1.5 flex items-center justify-between gap-1 shadow-2xl border-white/10 shadow-orange-500/10">
+        
+        <button onclick="DUI.switchView('orders')" id="tab-orders" class="nav-item relative flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest bg-orange-500 text-black shadow-lg">
+          <span id="orderBadge" class="hidden absolute top-2 right-6 w-2.5 h-2.5 bg-red-500 border-2 border-slate-950 rounded-full animate-ping"></span>
+          <i class="fa-solid fa-route text-base"></i>
+          <span>Orders</span>
+          <div class="active-indicator absolute -bottom-1 w-4 h-1 bg-black rounded-full opacity-100"></div>
+        </button>
+
+        <button onclick="DUI.switchView('stats')" id="tab-stats" class="nav-item flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-white/5">
+          <i class="fa-solid fa-chart-simple text-base"></i>
+          <span>Stats</span>
+          <div class="active-indicator absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full opacity-0"></div>
+        </button>
+
+        <button onclick="DUI.switchView('profile')" id="tab-profile" class="nav-item flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-white/5">
+          <i class="fa-solid fa-user-gear text-base"></i>
+          <span>Setting</span>
+          <div class="active-indicator absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full opacity-0"></div>
+        </button>
+      </div>
+    </nav>
+  </div>
+  <script src="src/delivery.js"></script>
+</body>
+</html>

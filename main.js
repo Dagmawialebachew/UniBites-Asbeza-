@@ -39,6 +39,29 @@ if (telegramUserId) {
   console.log("No user_id found in query params");
 }
 
+const userId = localStorage.getItem("ub_user_id");
+
+if (userId) {
+  fetch(`${API}/auth/role?user_id=${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "ok") {
+        if (data.role === "delivery") {
+          window.location.href = "delivery.html";
+        } else {
+          window.location.href = "index.html";
+        }
+      } else {
+        console.error("Role lookup failed:", data.message);
+        // fallback: send to index.html
+        window.location.href = "index.html";
+      }
+    })
+    .catch(err => {
+      console.error("Role API error:", err);
+      window.location.href = "index.html";
+    });
+}
 
 /* ---------- UI Preview Logic ---------- */
 const UI = {
