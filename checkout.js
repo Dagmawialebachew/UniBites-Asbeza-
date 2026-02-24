@@ -134,7 +134,7 @@ class="w-full h-full object-cover transition-opacity duration-300"              
           </div>
 
           <div class="min-w-0">
-            <div class="font-black uppercase italic tracking-tighter text-white text-md leading-none truncate">${escapeHtml(item.name)}</div>
+            <div class="font-black font-mono tracking-tighter text-white text-sm leading-none truncate">${escapeHtml(item.name)}</div>
             <div class="flex items-center gap-2 mt-1">
                <span class="text-orange-500 text-[10px] font-black mono">${formatPrice(price)}</span>
                <span class="w-1 h-1 rounded-full bg-white/10"></span>

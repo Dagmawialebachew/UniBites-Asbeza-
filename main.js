@@ -65,163 +65,306 @@ if (userId) {
 
 /* ---------- UI Preview Logic ---------- */
 const UI = {
+  currentCategory: 'all',
+  selectedCategories: [],
+
+  handleFiltering() {
+    const searchEl = document.getElementById('searchInput');
+    const searchVal = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+    const filtered = (this.allItems || []).filter(item => {
+      const name = (item.name || '').toLowerCase();
+      const desc = (item.description || '').toLowerCase();
+      const matchesSearch = !searchVal || name.includes(searchVal) || desc.includes(searchVal);
+      const matchesCategory = this.selectedCategories.length === 0 || this.selectedCategories.includes(item.category);
+      return matchesSearch && matchesCategory;
+    });
+
+    if (typeof this.renderItems === "function") {
+      this.renderItems(filtered);
+    } else if (typeof renderItems === "function") {
+      renderItems(filtered);
+    }
+  },
+
   openPreview(url, name, variants = [], productId = null) {
-  const modal = document.getElementById('imagePreviewModal');
-  const img = document.getElementById('previewFullImg');
-  const title = document.getElementById('previewTitle');
-  const variantBox = document.getElementById('previewVariants');
+    const modal = document.getElementById('imagePreviewModal');
+    const img = document.getElementById('previewFullImg');
+    const title = document.getElementById('previewTitle');
+    const variantBox = document.getElementById('previewVariants');
 
-  if (!url || url === 'undefined') return;
+    if (!modal) return;
+    if (!url || url === 'undefined') return;
 
-  // Load fresh cart from storage
-  
-  // Find cart entry by product id (NOT by array index)
-         let currentCart = loadCart();
+    // Load fresh cart from storage
+    let currentCart = loadCart();
 
-  const itemInCart = productId != null ? currentCart.find(c => c.id === productId) : undefined;
+    // Find cart entry by product id
+    const itemInCart = productId != null ? currentCart.find(c => c.id === productId) : undefined;
+    const currentSelectedId = itemInCart?.variant_id ?? null;
 
-  // Determine active variant: prefer saved cart choice, otherwise none (so nothing is pre-checked for empty cart)
-  const currentSelectedId = itemInCart?.variant_id ?? null;
+    // Set initial image and title
+    const initialVariant = variants.find(v => v.id === currentSelectedId);
+    if (img) img.src = (initialVariant && initialVariant.image_url) ? initialVariant.image_url : url;
+    if (title) title.textContent = name || '';
 
-  // Set initial image (use selected variant image if present)
-  const initialVariant = variants.find(v => v.id === currentSelectedId);
-  img.src = (initialVariant && initialVariant.image_url) ? initialVariant.image_url : url;
-  title.textContent = name;
+    // Render variants
+    if (variantBox) {
+      if (variants.length) {
+        variantBox.innerHTML = `
+          <div class="space-y-4 relative">
+            <div id="variantToast" class="absolute -top-10 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-orange-500 text-black text-[9px] font-black uppercase tracking-widest rounded-full opacity-0 translate-y-2 transition-all duration-300 pointer-events-none z-20 shadow-xl border border-black/10">
+              Option Updated
+            </div>
 
-  // Render variants (no pre-check if cart has no entry)
-  if (variants.length) {
-    variantBox.innerHTML = `
-      <div class="space-y-4 relative">
-        <div id="variantToast" class="absolute -top-10 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-orange-500 text-black text-[9px] font-black uppercase tracking-widest rounded-full opacity-0 translate-y-2 transition-all duration-300 pointer-events-none z-20 shadow-xl border border-black/10">
-          Option Updated
-        </div>
+            <div class="flex items-center justify-between px-1">
+              <h4 class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Select Your Option</h4>
+              <span class="text-[9px] text-orange-500 font-bold uppercase tracking-widest">Active Choice</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              ${variants.map(v => {
+                const isActive = v.id === currentSelectedId;
+                return `
+                <button 
+                  type="button"
+                  class="variant-btn group relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 ${isActive ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(255,122,0,0.15)]' : 'bg-white/5 border-white/5 hover:border-white/20'}"
+                  data-id="${v.id}" 
+                  data-price="${v.price}" 
+                  data-name="${escapeHtml(v.name)}" 
+                  data-image="${v.image_url || url}"
+                  data-productid="${productId}">
+                  
+                  <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? 'border-orange-500 bg-orange-500' : 'border-white/20 bg-transparent'}">
+                    ${isActive ? '<i class="fa-solid fa-check text-black text-[10px]"></i>' : ''}
+                  </div>
 
-        <div class="flex items-center justify-between px-1">
-          <h4 class="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Select Your Option</h4>
-          <span class="text-[9px] text-orange-500 font-bold uppercase tracking-widest">Active Choice</span>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          ${variants.map(v => {
-            const isActive = v.id === currentSelectedId;
-            return `
-            <button 
-              class="variant-btn group relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 ${isActive ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(255,122,0,0.15)]' : 'bg-white/5 border-white/5 hover:border-white/20'}"
-              data-id="${v.id}" 
-              data-price="${v.price}" 
-              data-name="${escapeHtml(v.name)}" 
-              data-image="${v.image_url || url}"
-              data-productid="${productId}">
-              
-              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? 'border-orange-500 bg-orange-500' : 'border-white/20 bg-transparent'}">
-                ${isActive ? '<i class="fa-solid fa-check text-black text-[10px]"></i>' : ''}
-              </div>
-
-              <div class="flex flex-col items-start">
-                <span class="text-[11px] font-black uppercase tracking-tight ${isActive ? 'text-white' : 'text-slate-300'}">
-                  ${escapeHtml(v.name)}
-                </span>
-                <span class="text-[10px] font-bold ${isActive ? 'text-orange-500' : 'text-slate-500'}">
-                  ${formatPrice(v.price)}
-                </span>
-              </div>
-            </button>
-          `}).join("")}
-        </div>
-      </div>
-    `;
-  } else {
-    variantBox.innerHTML = `<p class="text-slate-500 text-xs italic">No variants available</p>`;
-  }
-
-  modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-
-  // Attach click handlers for variant buttons
-  document.querySelectorAll(".variant-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const vId = Number(btn.dataset.id);
-      const vPrice = Number(btn.dataset.price);
-      const vName = btn.dataset.name;
-      const vImage = btn.dataset.image;
-      const pid = Number(btn.dataset.productid);
- 
-
-      // Update visuals immediately
-      document.querySelectorAll(".variant-btn").forEach(b => {
-        const isThis = Number(b.dataset.id) === vId;
-        b.className = `variant-btn group relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 ${isThis ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(255,122,0,0.15)]' : 'bg-white/5 border-white/5 hover:border-white/20'}`;
-        const circle = b.querySelector('.w-5');
-        circle.className = `w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isThis ? 'border-orange-500 bg-orange-500' : 'border-white/20 bg-transparent'}`;
-        circle.innerHTML = isThis ? '<i class="fa-solid fa-check text-black text-[10px]"></i>' : '';
-      });
-
-      // Persist selection by product id (add if missing, update if exists)
-  let entry = currentCart.find(c => c.id === pid);
-  if (!entry) {
-    // If item isn't in cart yet, add it
-    currentCart.push({
-        id: pid,
-        name: name,
-        variant_id: vId,
-        price: vPrice,
-        quantity: 1,
-        image_url: vImage,
-        variants: variants
-    });
-} else {
-    // If item exists, update the specific entry
-    entry.variant_id = vId;
-    entry.price = vPrice;
-    entry.image_url = vImage;
-}
-cart = currentCart
-
-// Save to localStorage
-saveCart(cart); 
-updateCartUI(); 
-if (typeof renderCartPreview === "function") renderCartPreview();
-if (typeof updateSummaryUI === "function") updateSummaryUI();
-updateSummaryUI();
-
-      
-      img.src = vImage || url;
-
-      // Optional global hook (keeps other modules in sync)
-      if (typeof updateVariant === "function") {
-        updateVariant(pid, { id: vId, name: vName, price: vPrice, image_url: vImage });
+                  <div class="flex flex-col items-start">
+                    <span class="text-[11px] font-black uppercase tracking-tight ${isActive ? 'text-white' : 'text-slate-300'}">
+                      ${escapeHtml(v.name)}
+                    </span>
+                    <span class="text-[10px] font-bold ${isActive ? 'text-orange-500' : 'text-slate-500'}">
+                      ${formatPrice(v.price)}
+                    </span>
+                  </div>
+                </button>
+              `}).join("")}
+            </div>
+          </div>
+        `;
+      } else {
+        variantBox.innerHTML = `<p class="text-slate-500 text-xs italic">No variants available</p>`;
       }
-
-// Refresh cart UI immediately
-      
-     
-
-      // Toast feedback
-      const toast = document.getElementById('variantToast');
-      if (toast) {
-        toast.textContent = `Selected: ${vName}`;
-        toast.classList.remove('opacity-0', 'translate-y-2');
-        toast.classList.add('opacity-100', 'translate-y-0');
-        setTimeout(() => {
-          toast.classList.add('opacity-0', 'translate-y-2');
-          toast.classList.remove('opacity-100', 'translate-y-0');
-        }, 1200);
-      }
-    });
-  });
-},
-
-    closePreview() {
-        const modal = document.getElementById('imagePreviewModal');
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto'; // Unlock scroll
     }
 
-    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    // Attach click handlers for variant buttons (defensive)
+    document.querySelectorAll(".variant-btn").forEach(btn => {
+      btn.replaceWith(btn.cloneNode(true)); // remove previous listeners
+    });
+
+    document.querySelectorAll(".variant-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const vId = Number(btn.dataset.id);
+        const vPrice = Number(btn.dataset.price);
+        const vName = btn.dataset.name;
+        const vImage = btn.dataset.image;
+        const pid = Number(btn.dataset.productid);
+
+        // Update visuals immediately
+        document.querySelectorAll(".variant-btn").forEach(b => {
+          const isThis = Number(b.dataset.id) === vId;
+          b.className = `variant-btn group relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 ${isThis ? 'bg-orange-500/10 border-orange-500 shadow-[0_0_15px_rgba(255,122,0,0.15)]' : 'bg-white/5 border-white/5 hover:border-white/20'}`;
+          const circle = b.querySelector('.w-5');
+          if (circle) {
+            circle.className = `w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isThis ? 'border-orange-500 bg-orange-500' : 'border-white/20 bg-transparent'}`;
+            circle.innerHTML = isThis ? '<i class="fa-solid fa-check text-black text-[10px]"></i>' : '';
+          }
+        });
+
+        // Persist selection by product id
+        currentCart = loadCart();
+        let entry = currentCart.find(c => c.id === pid);
+        if (!entry) {
+          currentCart.push({
+            id: pid,
+            name: name,
+            variant_id: vId,
+            price: vPrice,
+            quantity: 1,
+            image_url: vImage,
+            variants: variants
+          });
+        } else {
+          entry.variant_id = vId;
+          entry.price = vPrice;
+          entry.image_url = vImage;
+        }
+
+        // Save and update UI hooks
+        saveCart(currentCart);
+        if (typeof updateCartUI === "function") updateCartUI();
+        if (typeof renderCartPreview === "function") renderCartPreview();
+        if (typeof updateSummaryUI === "function") updateSummaryUI();
+
+        if (img) img.src = vImage || url;
+
+        if (typeof updateVariant === "function") {
+          updateVariant(pid, { id: vId, name: vName, price: vPrice, image_url: vImage });
+        }
+
+        // Toast feedback
+        const toast = document.getElementById('variantToast');
+        if (toast) {
+          toast.textContent = `Selected: ${vName}`;
+          toast.classList.remove('opacity-0', 'translate-y-2');
+          toast.classList.add('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-y-2');
+            toast.classList.remove('opacity-100', 'translate-y-0');
+          }, 1200);
+        }
+      });
+    });
+  },
+
+  closePreview() {
+    const modal = document.getElementById('imagePreviewModal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
 };
 
-// Also expose closePreview to the window so the HTML 'onclick' can find it
+// expose UI
 window.UI = UI;
+
+/* ---------- Filter helpers (keep existing global constants if present) ---------- */
+const ASBEZA_CATEGORIES = ["Staples", "Vegetables", "Snacks", "Drinks", "Personal Care", "Other"];
+
+// Toggle filter menu
+
+
+// Initialize filter pills and controls
+// Live active filters container update
+UI.updateActiveFilters = function() {
+  const container = document.getElementById('activeFilters');
+  const countLabel = document.getElementById('filterCount');
+  if (!container) return;
+
+  if (this.selectedCategories.length === 0) {
+    container.innerHTML = '<p class="text-[10px] text-slate-600 italic mono uppercase pl-1">No Active Filters</p>';
+    if(countLabel) countLabel.textContent = "0 SELECTED";
+    return;
+  }
+
+  if(countLabel) countLabel.textContent = `${this.selectedCategories.length} SELECTED`;
+
+  // Render chips inside the overlay
+  const chips = this.selectedCategories.map(cat => `
+    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/30 text-[9px] mono uppercase text-orange-500">
+      ${escapeHtml(cat)}
+      <button type="button" data-cat="${escapeHtml(cat)}" class="remove-filter hover:text-white">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </span>
+  `).join('');
+
+  container.innerHTML = chips;
+
+  // Re-bind remove buttons
+  container.querySelectorAll('.remove-filter').forEach(btn => {
+    btn.onclick = (e) => {
+      const cat = btn.dataset.cat;
+      this.selectedCategories = this.selectedCategories.filter(c => c !== cat);
+      
+      // Update the main pills UI
+      const pill = document.querySelector(`.multi-cat-pill[data-cat="${cat}"]`);
+      if (pill) pill.classList.remove('active-pill');
+
+      const dot = document.getElementById('filterActiveDot');
+      if (dot) dot.classList.toggle('hidden', this.selectedCategories.length === 0);
+      
+      this.updateActiveFilters();
+      this.handleFiltering();
+    };
+  });
+};
+
+// Toggle filter menu (toggle hidden/block)
+UI.toggleFilterMenu = function() {
+  const menu = document.getElementById('filterMenu');
+  if (!menu) return;
+
+  const isHidden = menu.classList.contains('hidden');
+  
+  if (isHidden) {
+    menu.classList.remove('hidden');
+    document.body.classList.add('filter-open'); // Stops background scroll
+  } else {
+    menu.classList.add('hidden');
+    document.body.classList.remove('filter-open'); // Restores scroll
+  }
+};
+
+// Initialize filter pills and controls (multi-select + live chips)
+UI.initFilters = function() {
+  const container = document.getElementById('multiCategoryContainer');
+  if (!container) return;
+
+  // Use a cleaner button style
+  container.innerHTML = ASBEZA_CATEGORIES.map(cat => `
+    <button type="button" data-cat="${escapeHtml(cat)}" 
+      class="multi-cat-pill flex items-center justify-between px-4 py-3 rounded-xl border border-white/5 bg-white/[0.02] text-[10px] mono text-slate-400 text-left transition-all duration-300">
+      ${escapeHtml(cat)}
+      <div class="indicator w-1.5 h-1.5 rounded-full bg-white/10"></div>
+    </button>
+  `).join('');
+
+  container.querySelectorAll('.multi-cat-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cat = btn.dataset.cat;
+      if (UI.selectedCategories.includes(cat)) {
+        UI.selectedCategories = UI.selectedCategories.filter(c => c !== cat);
+        btn.classList.remove('active-pill');
+      } else {
+        UI.selectedCategories.push(cat);
+        btn.classList.add('active-pill');
+      }
+      
+      const dot = document.getElementById('filterActiveDot');
+      if (dot) dot.classList.toggle('hidden', UI.selectedCategories.length === 0);
+
+      UI.updateActiveFilters();
+      UI.handleFiltering();
+    });
+  });
+
+  // Toggle/Clear/Apply remain the same...
+  document.getElementById('filterToggleBtn').onclick = () => UI.toggleFilterMenu();
+  document.getElementById('clearFiltersBtn').onclick = () => {
+    UI.selectedCategories = [];
+    container.querySelectorAll('.multi-cat-pill').forEach(b => b.classList.remove('active-pill'));
+    document.getElementById('filterActiveDot')?.classList.add('hidden');
+    UI.updateActiveFilters();
+    UI.handleFiltering();
+  };
+  document.getElementById('applyFiltersBtn').onclick = () => UI.toggleFilterMenu();
+
+  UI.updateActiveFilters();
+};
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  
+
+  // initialize category pills
+  if (typeof UI.initFilters === "function") {
+    UI.initFilters();
+  }
+});
 
 
 /* ---------- DOM refs ---------- */
@@ -383,7 +526,7 @@ onclick='UI.openPreview("${item.image_url}", "${escapeHtml(item.name)}", ${JSON.
 
 
         <div class="flex flex-col px-1 pt-3 pb-1">
-            <h4 class="text-white font-bold text-sm sm:text-base leading-tight uppercase tracking-tight truncate mb-1">
+            <h4 class="text-white font-bold text-[12px] sm:text-base leading-tight tracking-tight truncate mb-1">
                 ${escapeHtml(item.name)}
             </h4>
             
@@ -401,7 +544,7 @@ onclick='UI.openPreview("${item.image_url}", "${escapeHtml(item.name)}", ${JSON.
                 <button class="add-btn flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-orange-500 text-black hover:text-white transition-all duration-300 active:scale-90 shadow-lg"
                         >
                     <i class="fa-solid fa-plus text-[9px]"></i>
-                    <span class="text-[10px] font-black uppercase tracking-widest">Add</span>
+                    <span class="text-[8px] font-black uppercase tracking-widest">Add</span>
                 </button>
             </div>
         </div>
@@ -587,11 +730,31 @@ cartBackdrop.addEventListener("click", closeCartModal);
 closeCart.addEventListener("click", closeCartModal);
 clearCartBtn.addEventListener("click", clearCart);
 refreshBtn.addEventListener("click", async () => {
-  refreshBtn.disabled = true;
-  refreshBtn.textContent = "Refreshing...";
+  refreshBtn.disabled = true; // Disable while loading to prevent spam
+  refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate animate-spin"></i>';
+
+  /* --- RESET FILTER STATE --- */
+  UI.selectedCategories = []; // Clear the selection array
+  
+  // Remove orange active states from all pills
+  document.querySelectorAll('.multi-cat-pill').forEach(pill => {
+      pill.classList.remove('active-pill');
+  });
+
+  // Hide the orange notification dot on the filter toggle button
+  const filterDot = document.getElementById('filterActiveDot');
+  if (filterDot) filterDot.classList.add('hidden');
+
+  // Clear out the live chips inside the overlay
+  if (typeof UI.updateActiveFilters === "function") {
+      UI.updateActiveFilters();
+  }
+
+  /* --- FETCH FRESH DATA --- */
   await init();
+
   refreshBtn.disabled = false;
-  refreshBtn.textContent = "Refresh";
+  refreshBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
 });
 
 searchInput.addEventListener("input", (e) => {
@@ -712,6 +875,7 @@ UI.loadUserOrders = async function() {
     try {
         const res = await fetch(`${API}/asbeza/orders?user_id=${userId}`);
         const data = await res.json();
+        
         console.log('here is the data passed', data)
         
         if (!data.orders || data.orders.length === 0) return;
@@ -769,35 +933,98 @@ UI.loadUserOrders = async function() {
         container.innerHTML = `<p class="text-red-500 mono text-center">Protocol Error: Unable to sync with server.</p>`;
     }
 };
-
 UI.showDetails = function(order) {
     const modal = document.getElementById('order-details-modal');
-    console.log('order', order)
     
-    // Fill the data
-    document.getElementById('modal-order-id').innerText = `ID: #UB-${order.id}`;
-    document.getElementById('modal-unpaid').innerText = `${order.total_price - order.upfront_paid} ETB`;
-    document.getElementById('modal-status').innerText = order.status;
-    document.getElementById('modal-status').className = `text-lg font-bold uppercase italic ${
-        order.status === 'delivered' ? 'text-green-500' : 'text-orange-500'
-    }`;
+    // 1. Set ID and Calculations
+    document.getElementById('modal-order-id').innerText = `ORD_TX: #UB-${order.id}`;
     
-    // Set the Image (Receipt)
-    const imgElement = document.getElementById('modal-receipt-img');
-    if (order.image_url) {
-        imgElement.src = order.image_url;
-        imgElement.parentElement.classList.remove('hidden');
+    const deliveryFee = order.delivery_fee || 0;
+    const itemsPrice = order.total_price - deliveryFee;
+    const upfront = order.upfront_paid || 0;
+    const unpaid = order.total_price - upfront;
+
+    document.getElementById('modal-items-price').innerText = `${itemsPrice.toLocaleString()} ETB`;
+    document.getElementById('modal-delivery-fee').innerText = `${deliveryFee.toLocaleString()} ETB`;
+    document.getElementById('modal-upfront').innerText = `-${upfront.toLocaleString()} ETB`;
+    document.getElementById('modal-total').innerText = `${order.total_price.toLocaleString()} ETB`;
+    document.getElementById('modal-unpaid').innerText = `${unpaid.toLocaleString()} ETB`;
+
+    // 2. Courier Logic (Hide loader if Cancelled or Pending)
+    const agentContainer = document.getElementById('modal-agent-info');
+    const noCourierStatus = ['pending', 'cancelled'];
+    
+    if (order.delivery && order.delivery.name) {
+        agentContainer.innerHTML = `
+            <div class=" font-mono p-4 rounded-[2rem] bg-orange-500/10 border border-orange-500/20 flex items-center gap-4">
+                <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-black font-black text-xl italic border-4 border-black/20">
+                    ${order.delivery.name[0]}
+                </div>
+                <div class="flex-1">
+                    <p class="text-[8px] mono text-orange-500 uppercase font-black mb-1">Assigned Agent</p>
+                    <h4 class="text-sm font-black text-white uppercase">${order.delivery.name}</h4>
+                    <p class="text-[9px] text-slate-500 mono uppercase">${order.delivery.campus} campus</p>
+                </div>
+                <a href="tel:${order.delivery.phone}" class="w-12 h-12 rounded-2xl bg-orange-500 text-black flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                    <i class="fa-solid fa-phone"></i>
+                </a>
+            </div>`;
+    } else if (!noCourierStatus.includes(order.status.toLowerCase())) {
+        // Only show searching if it's NOT pending/cancelled
+        agentContainer.innerHTML = `
+            <div class="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 flex flex-col items-center justify-center gap-3 text-center">
+                <div class="w-8 h-8 border-2 border-slate-700 border-t-orange-500 rounded-full animate-spin"></div>
+                <p class="text-[9px] mono text-slate-500 uppercase tracking-widest">Searching for Delivery Guy...</p>
+            </div>`;
     } else {
-        imgElement.parentElement.classList.add('hidden');
+        // Show Status Badge instead
+        agentContainer.innerHTML = `
+            <div class="p-4 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-center gap-3">
+                <span class="text-[10px] mono text-slate-400 uppercase">System Status:</span>
+                <span class="text-[10px] mono font-black text-orange-500 uppercase">${order.status}</span>
+            </div>`;
     }
 
-    // Show Modal
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling background
-    
-    if (window.Telegram?.WebApp?.isVersionAtLeast('6.1')) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+    // 3. Receipt Handling
+    const imgElement = document.getElementById('modal-receipt-img');
+    const receiptSection = document.getElementById('receipt-section');
+    if (order.image_url) {
+        imgElement.src = order.image_url;
+        receiptSection.classList.remove('hidden');
+    } else {
+        receiptSection.classList.add('hidden');
     }
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+};
+
+// Open Image in New Tab / Full View
+UI.viewFullReceipt = function() {
+    const src = document.getElementById('modal-receipt-img').src;
+    const zoomOverlay = document.getElementById('receipt-zoom-overlay');
+    const zoomImg = document.getElementById('zoomed-receipt-img');
+
+    if (!src || src === window.location.href) {
+        console.error("Receipt source is empty or invalid");
+        return;
+    }
+
+    // Set the image and show overlay
+    zoomImg.src = src;
+    zoomOverlay.classList.remove('hidden');
+    zoomOverlay.classList.add('flex');
+
+    // Haptic feedback for the "Pop" effect
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+    }
+};
+
+UI.closeReceiptZoom = function() {
+    const zoomOverlay = document.getElementById('receipt-zoom-overlay');
+    zoomOverlay.classList.add('hidden');
+    zoomOverlay.classList.remove('flex');
 };
 
 UI.closeDetails = function() {
