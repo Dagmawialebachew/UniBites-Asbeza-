@@ -30,7 +30,13 @@ function getQueryParam(name) {
   return urlParams.get(name);
 }
 
-const telegramUserId = getQueryParam("user_id");
+
+const tg = window.Telegram?.WebApp;
+let telegramUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id ??
+getQueryParam("user_id");
+console.log('Telegram user id', telegramUserId )
+telegramUserId = telegramUserId ? parseInt(telegramUserId, 10) : null;
+
 
 if (telegramUserId) {
   localStorage.setItem("ub_user_id", telegramUserId);
