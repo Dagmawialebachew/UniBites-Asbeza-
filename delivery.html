@@ -1,69 +1,203 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
-  <title>UniBites · Rider OS</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0" />
+    <title>UniBites · Delivery OS</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-ui { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); }
+        body { background-color: #020617; } /* Deep Slate 950 */
+        .scan-line { animation: scan 3s linear infinite; }
+        @keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(200%); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
 
-  <link rel="stylesheet" href="src/style.css">
+        .skeleton {
+            background: linear-gradient(90deg, 
+                rgba(255,255,255,0.01) 25%, 
+                rgba(255,255,255,0.05) 50%, 
+                rgba(255,255,255,0.01) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+    </style>
 </head>
 
-<body class="text-slate-100 antialiased min-h-screen pb-44">
-  <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+<body class="text-slate-100 antialiased min-h-screen pb-32">
+    <audio id="notifSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
-  <div class="max-w-6xl mx-auto px-4 pt-6 relative z-10">
-    <header class="flex items-center justify-between py-6 mb-4">
-      <div class="flex items-center gap-4 group">
-        <div class="relative w-12 h-12 flex-shrink-0">
-          <div class="absolute inset-0 bg-orange-500/10 rounded-xl blur-lg"></div>
-          <div class="relative w-full h-full bg-slate-950 border border-white/10 rounded-xl flex items-center justify-center overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/10 to-transparent -translate-y-full scan-line"></div>
-            <img src="/assets/unibites-logo.png" alt="Logo" class="w-7 h-7 object-contain relative z-10" />
-          </div>
+    <div class="max-w-xl mx-auto px-5 pt-8">
+        <header class="flex items-center justify-between mb-10">
+            <div class="flex items-center gap-4">
+                <div class="relative w-14 h-14">
+                    <div class="absolute inset-0 bg-orange-500/20 rounded-2xl blur-xl animate-pulse"></div>
+                    <div class="relative w-full h-full bg-slate-900 border border-white/10 rounded-2xl flex items-center justify-center overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/10 to-transparent scan-line"></div>
+                        <i class="fa-solid fa-bolt-lightning text-orange-500 text-xl"></i>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter uppercase italic leading-none">UNIBITES ASBEZA</h1>
+                    <div class="flex items-center gap-2 mt-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#22c55e]"></span>
+                        <span id="dgName" class="text-[10px] mono text-slate-500 uppercase font-black tracking-widest">Awaiting Link...</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="location.reload()" class="w-12 h-12 rounded-2xl glass-ui border border-white/5 flex items-center justify-center text-slate-400 active:scale-90 transition-all">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </header>
+
+        <main id="view-orders" class="space-y-6">
+            <div class="flex justify-between items-end px-1">
+                <p class="mono text-[10px] text-slate-500 uppercase tracking-[0.3em]">Active_Deliveries</p>
+                <span class="text-[9px] bg-orange-500/10 text-orange-500 px-2 py-0.5 rounded font-bold mono">LIVE</span>
+            </div>
+            <section id="ordersList" class="space-y-4"></section>
+        </main>
+
+      <main id="view-stats" class="hidden animate-in fade-in slide-in-from-bottom-4 pb-24">
+    <div class="mb-10">
+        <p class="mono text-[10px] text-slate-500 uppercase tracking-[0.3em] mb-6 px-1">Overall Performance</p>
+        <div id="statsContainer" class="grid grid-cols-2 gap-4">
         </div>
-        <div class="flex flex-col">
-          <h1 class="text-xl font-black tracking-tight uppercase leading-none">Rider<span class="text-orange-500 ml-1">Terminal</span></h1>
-          <div class="flex items-center gap-1.5 mt-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-            <span id="dgName" class="text-[10px] text-slate-500 uppercase font-bold tracking-wider italic">Linking...</span>
-          </div>
+    </div>
+
+    <div class="mb-10">
+        <div class="flex justify-between items-end px-1 mb-6">
+            <p class="mono text-[10px] text-emerald-500 font-black uppercase tracking-[0.3em]">Food Deliveries</p>
+            <div class="h-[1px] flex-1 bg-emerald-500/10 mx-4 mb-1"></div>
+            <span class="text-[8px] mono text-slate-600 uppercase">Section 01</span>
         </div>
-      </div>
-      <button onclick="location.reload()" class="p-3 rounded-xl glass-ui hover:text-orange-500 transition-all active:scale-95">
-        <i class="fa-solid fa-arrows-rotate"></i>
-      </button>
-    </header>
+        <div id="food-stats-grid" class="grid grid-cols-2 gap-4">
+        </div>
+    </div>
 
-    <main id="view-orders"><section id="ordersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></section></main>
-    <main id="view-stats" class="hidden"><div id="statsContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div></main>
-    <main id="view-profile" class="hidden"><div id="profileDetails" class="max-w-2xl mx-auto glass-ui rounded-[2.5rem] p-2"></div></main>
+    <div class="mb-10">
+        <div class="flex justify-between items-end px-1 mb-6">
+            <p class="mono text-[10px] text-orange-500 font-black uppercase tracking-[0.3em]">Asbeza Deliveries</p>
+            <div class="h-[1px] flex-1 bg-orange-500/10 mx-4 mb-1"></div>
+            <span class="text-[8px] mono text-slate-600 uppercase">Section 02</span>
+        </div>
+        <div id="asbeza-stats-grid" class="grid grid-cols-2 gap-4">
+        </div>
+    </div>
+</main>
 
-    <nav class="fixed bottom-6 left-4 right-4 z-50">
-      <div class="max-w-md mx-auto glass-ui rounded-[2.2rem] p-1.5 flex items-center justify-between gap-1 shadow-2xl border-white/10 shadow-orange-500/10">
+        <main id="view-profile" class="hidden animate-in fade-in slide-in-from-bottom-4">
+            <div id="profileDetails" class="space-y-4"></div>
+        </main>
+
+        <nav class="fixed bottom-8 left-4 right-4 z-[100]">
+            <div class="max-w-md mx-auto glass-ui rounded-[2.5rem] p-2 flex items-center justify-between border border-white/10 shadow-2xl">
+                
+                <button onclick="DUI.switchView('orders')" id="tab-orders" class="nav-item relative flex-1 py-4 rounded-[2rem] transition-all flex items-center justify-center gap-3 bg-orange-500 text-black font-black uppercase text-[10px] tracking-widest">
+                    <span id="orderBadge" class="hidden absolute top-3 right-8 w-2 h-2 bg-red-600 rounded-full animate-ping"></span>
+                    <i class="fa-solid fa-map-location-dot"></i>
+                    <span class="hidden sm:inline">Orders</span>
+                </button>
+
+                <button onclick="DUI.switchView('stats')" id="tab-stats" class="nav-item flex-1 py-4 rounded-[2rem] transition-all flex items-center justify-center gap-3 text-slate-500 font-black uppercase text-[10px] tracking-widest">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span class="hidden sm:inline">Stats</span>
+                </button>
+
+                <button onclick="DUI.switchView('profile')" id="tab-profile" class="nav-item flex-1 py-4 rounded-[2rem] transition-all flex items-center justify-center gap-3 text-slate-500 font-black uppercase text-[10px] tracking-widest">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span class="hidden sm:inline">Agent</span>
+                </button>
+                
+            </div>
+        </nav>
+    </div>
+<div id="rider-modal" class="fixed inset-0 z-[120] hidden flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl animate-in fade-in duration-300">
+    <div class="glass-ui w-full max-w-lg rounded-[2.5rem] border border-white/10 overflow-hidden shadow-2xl animate-in zoom-in-95">
         
-        <button onclick="DUI.switchView('orders')" id="tab-orders" class="nav-item relative flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest bg-orange-500 text-black shadow-lg">
-          <span id="orderBadge" class="hidden absolute top-2 right-6 w-2.5 h-2.5 bg-red-500 border-2 border-slate-950 rounded-full animate-ping"></span>
-          <i class="fa-solid fa-route text-base"></i>
-          <span>Orders</span>
-          <div class="active-indicator absolute -bottom-1 w-4 h-1 bg-black rounded-full opacity-100"></div>
-        </button>
+        <div class="p-6 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+            <div>
+                <p id="rm-id" class="mono text-[9px] text-orange-500 tracking-[0.3em] uppercase mb-1">New Delivery</p>
+                <h2 class="text-xl font-black uppercase text-white italic tracking-tighter">Delivery Details</h2>
+            </div>
+            <button onclick="DUI.closeRiderModal()" class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 border border-white/10 active:scale-90 transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
 
-        <button onclick="DUI.switchView('stats')" id="tab-stats" class="nav-item flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-white/5">
-          <i class="fa-solid fa-chart-simple text-base"></i>
-          <span>Stats</span>
-          <div class="active-indicator absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full opacity-0"></div>
-        </button>
+        <div class="p-6 space-y-6 max-h-[65vh] overflow-y-auto no-scrollbar">
+            
+            <div class="relative group">
+                <div class="absolute inset-0 bg-orange-500/10 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative flex items-center gap-4 p-5 rounded-[2rem] bg-gradient-to-br from-white/[0.05] to-transparent border border-white/10">
+                    <div class="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center text-black shadow-lg shadow-orange-500/20">
+                        <i class="fa-solid fa-user text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p id="rm-customer-name" class="text-lg font-black text-white uppercase italic leading-tight">---</p>
+                        <p class="text-[9px] mono text-slate-500 uppercase tracking-widest mt-1">Customer Name</p>
+                    </div>
+                    <a id="rm-phone-link" href="#" class="w-14 h-14 rounded-full bg-green-500/10 border border-green-500/20 text-green-500 flex items-center justify-center hover:bg-green-500 hover:text-black transition-all shadow-inner">
+                        <i class="fa-solid fa-phone-flip animate-pulse"></i>
+                    </a>
+                </div>
+            </div>
 
-        <button onclick="DUI.switchView('profile')" id="tab-profile" class="nav-item flex-1 py-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1 mono text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-white/5">
-          <i class="fa-solid fa-user-gear text-base"></i>
-          <span>Setting</span>
-          <div class="active-indicator absolute -bottom-1 w-1 h-1 bg-orange-500 rounded-full opacity-0"></div>
-        </button>
-      </div>
-    </nav>
-  </div>
-  <script src="src/delivery.js"></script>
+            <div class="px-1 mb-2">
+                <div class="flex justify-between items-end mb-2">
+                    <p class="text-[8px] mono text-slate-500 uppercase tracking-[0.3em]">Time Active</p>
+                    <p id="rm-timer" class="text-[10px] mono text-orange-500 font-black tracking-widest">00:00:00</p>
+                </div>
+                <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div id="rm-timer-bar" class="h-full bg-orange-500 w-0 transition-all duration-1000"></div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between items-center px-1">
+                    <p class="text-[9px] mono text-slate-500 uppercase tracking-widest">Order Items</p>
+                    <span id="rm-item-count" class="text-[9px] mono text-orange-500 font-bold">0 ITEMS</span>
+                </div>
+                <div id="rm-items-list" class="space-y-2"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-5 rounded-[2rem] bg-black/40 border border-white/5">
+                    <p class="text-[8px] mono text-slate-500 uppercase mb-2">Collect Cash</p>
+                    <p id="rm-unpaid" class="text-xl font-black text-orange-500 italic font-mono"></p>
+                </div>
+                <div class="p-5 rounded-[2rem] bg-black/40 border border-white/5 text-right">
+                    <p class="text-[8px] mono text-slate-500 uppercase mb-2">Already Paid</p>
+                    <p id="rm-upfront" class="text-xl font-black text-white italic font-mono"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 bg-white/[0.02] border-t border-white/5">
+            <button id="rm-complete-btn" class="w-full py-4 bg-white text-black rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-xl active:scale-95 transition-all">
+                Mark Delivered
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="success-popup" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div class="bg-slate-900 border border-white/10 p-10 rounded-[3rem] flex flex-col items-center shadow-2xl animate-in zoom-in-90">
+        <div class="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(249,115,22,0.5)]">
+            <i class="fa-solid fa-check text-4xl text-black"></i>
+        </div>
+        <h2 class="text-2xl font-black text-white italic uppercase tracking-tighter">Delivery Done!</h2>
+        <p class="text-slate-400 mono text-[10px] mt-2 uppercase tracking-widest">Rewards Added to Wallet</p>
+    </div>
+</div>
+    <script src="src/delivery.js"></script>
 </body>
 </html>

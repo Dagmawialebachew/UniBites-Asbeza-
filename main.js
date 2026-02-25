@@ -1022,10 +1022,7 @@ UI.viewFullReceipt = function() {
     zoomOverlay.classList.remove('hidden');
     zoomOverlay.classList.add('flex');
 
-    // Haptic feedback for the "Pop" effect
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-    }
+   
 };
 
 UI.closeReceiptZoom = function() {

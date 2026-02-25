@@ -115,3 +115,39 @@
 body.filter-open {
     overflow: hidden;
 }
+
+/* Add this inside your <style> tag */
+.nav-item {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-ui:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Custom animation for the "New Order" Ping */
+@keyframes pulse-orange {
+    0% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(249, 115, 22, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+.active-ping {
+    animation: pulse-orange 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, 
+        rgba(255,255,255,0.01) 25%, 
+        rgba(255,255,255,0.05) 50%, 
+        rgba(255,255,255,0.01) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+}
