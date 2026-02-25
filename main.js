@@ -40,7 +40,8 @@ if (telegramUserId) {
 }
 
 const userId = localStorage.getItem("ub_user_id");
-
+const trial_id = document.getElementById('trial_id')
+trial_id.textContent = `Hello, User ${userId || "Guest"}!`;
 if (userId) {
   fetch(`${API}/auth/role?user_id=${userId}`)
     .then(res => res.json())
